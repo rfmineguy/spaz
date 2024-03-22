@@ -1,0 +1,31 @@
+3 5.4 + 2.365 - print .
+3 print .
+
+9 print . // No loops to start off
+5 4 + 3 5 + < print .
+
+if . 0x4 > . 0x2 < || {
+	"Hello World" print .
+}
+
+userInput prompt {
+	prompt print
+	input   // input can be a built-in
+}
+
+perform a b c d {
+}
+
+"Enter a number : " userInput
+"Enter a second number : " userInput
+"Enter an operator to use : " userInput
+
+switch . {
+	'+':   + break
+	'-':   - break
+	'*':   * break
+	'/':   / break
+	default: break
+}
+
+print .
