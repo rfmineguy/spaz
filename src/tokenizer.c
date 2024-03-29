@@ -70,8 +70,8 @@ const char* token_str(token_type t) {
 		case T_DEFAULT: 		return "DEFAULT";
 		case T_LP:      		return "LP";
 		case T_RP:      		return "RP";
-		case T_LBKT:				return "LKBT";
-		case T_RBKT:				return "RKBT";
+		// case T_LBKT:				return "LKBT";
+		// case T_RBKT:				return "RKBT";
 		case T_LBRC:				return "LBRC";
 		case T_RBRC:				return "RBRC";
 		case T_EQ: 					return "EQ"; 					 
@@ -98,7 +98,6 @@ const char* token_str(token_type t) {
 		case T_CHAR_LIT:    return "CHAR_LIT";
 		case T_SQUOTE: 			return "SQUOTE";
 		case T_DQUOTE:      return "DQUOTE";
-		case T_ARROW:    		return "ARROW";
 		case T_EOF: 				return "EOF";
 		case T_SPACE:       return "SPACE";
 		case T_UNKNOWN:  		return "UNKNOWN";
@@ -164,7 +163,8 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 		cursor++;
 	}
 	// Also consume comments
-	if (strncmp(cursor, "//", 2) == 0) {
+	while (strncmp(cursor, "//", 2) == 0) {
+		// printf("Consume comment\n");
 		while (*cursor != '\n') {
 			cursor++;
 		}
@@ -185,7 +185,7 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	RMATCH("switch", T_SWITCH);
 	RMATCH("break", T_BREAK);
 	RMATCH("default", T_DEFAULT);
-	RMATCH("->", T_ARROW);
+	// RMATCH("->", T_ARROW);
 	RMATCH("0x[0-9a-fA-F]+", T_HEX_LIT);
 	RMATCH("[0-9]+\\.[0-9]+", T_DOUBLE_LIT);
 	RMATCH("[0-9]+", T_DECIMAL_LIT);
@@ -203,8 +203,8 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	CHMATCH('.', T_PERIOD);
 	CHMATCH('(', T_LP);
 	CHMATCH(')', T_RP);
-	CHMATCH('[', T_LBKT);
-	CHMATCH(']', T_RBKT);
+	// CHMATCH('[', T_LBKT);
+	// CHMATCH(']', T_RBKT);
 	CHMATCH('{', T_LBRC);
 	CHMATCH('}', T_RBRC);
 	CHMATCH('-', T_MINUS);

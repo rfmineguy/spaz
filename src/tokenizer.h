@@ -6,29 +6,37 @@
 #include "cvector.h"
 
 typedef enum token_type {
+	// Unreserved tokens
+	T_ID, 
+	T_DOUBLE_LIT, T_DECIMAL_LIT, T_HEX_LIT, T_STRING_LIT, T_CHAR_LIT, 
+	// Reserved tokens
+	T_RESERVE_BEG,
 	T_FN, T_IF, T_ELSE,
 	T_SWITCH, T_BREAK, T_DEFAULT,
-	
-	T_ID, 
+	T_SQUOTE, T_DQUOTE,
 	T_LP, T_RP,
-	T_LBKT, T_RBKT,
 	T_LBRC, T_RBRC,
+	T_RESERVE_END,
 
-	T_EQ, T_GT, T_LT, T_GTEQ, T_LTEQ,
-
-	T_LOR, T_LAND, // logical
 	T_BOR, T_BAND, // bitwise
 
+	// LogicOp 
+	T_LOGIC_BEG, 
+	T_EQ, T_GT, T_LT, T_GTEQ, T_LTEQ,
+	T_LOR, T_LAND, // logical
+	T_LOGIC_END,
+
+	// StackOp
+	T_STACK_BEG,
 	T_COLON, T_COMMA, T_PERIOD,
-	T_MINUS, T_PLUS,
-	T_MUL, T_DIV, T_MOD,
+	T_STACK_END,
 
-	T_DOUBLE_LIT, T_DECIMAL_LIT, T_HEX_LIT, T_STRING_LIT, T_CHAR_LIT,
+	// ArithOp
+	T_ARITH_BEG,
+	T_MINUS, T_PLUS,T_MUL, T_DIV, T_MOD,
+	T_ARITH_END,
 
-	T_SQUOTE, T_DQUOTE,
-
-	T_ARROW,
-
+	// Internal tokens
 	T_EOF, T_SPACE, T_UNKNOWN
 } token_type;
 

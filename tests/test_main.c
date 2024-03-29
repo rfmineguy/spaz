@@ -102,7 +102,7 @@ MunitResult stack_expression_test (const MunitParameter params[], void* fixture)
 		parse_stack_node t = pctx_peek(&ctx);
 		pctx_pop(&ctx);
 		switch (t.terminal.type) {
-			case T_ID: pctx_push(&ctx, PSNODE_NEW_
+			// case T_ID: pctx_push(&ctx, PSNODE_NEW
 		}
 	}
 	

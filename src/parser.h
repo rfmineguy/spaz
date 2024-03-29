@@ -3,33 +3,19 @@
 #include "ast.h"
 #include "tokenizer.h"
 
-#define PSNODE_NEW_TERMINAL(t) (parse_stack_node) {.type=PSNT_TERMINAL, .terminal=t}
+#define PSNODE_NEW_TERMINAL(t) (parse_stack_node) {.node.type=PSNT_TERMINAL, .terminal=t}
 #define PSNODE_NEW_TERM(type, v) (parse_stack_node) {}
-#define NT_LIST(...) (pstack_node_type[]) { __VA_ARGS__ }
+#define NT_LIST(...) (AST_NodeType[]) { __VA_ARGS__ }
 
-typedef enum {
-	PSNT_TERMINAL, PSNT_TERM, PSNT_EXPRESSION, PSNT_PROCEDURE_CALL, PSNT_PROCEDURE_DEF, PSNT_IFF, PSNT_SWITCH, PSNT_CASE
-} pstack_node_type ;
+#define P_NEW_TERMINAL(type_, expr) \
+	(Terminal) {.type=type_, expr}
+
 typedef struct parse_stack_node {
-	pstack_node_type type;
-	union {
-		token terminal;
-		Term term;
-		Expression expression;
-		ProcedureCall procedureCall;
-		ProcedureDef procedureDef;
-		Iff iff;
-		Switch switchh;
-		Case casee;
-	};
+	AST_Node node;
 } parse_stack_node;
 
-/* Should this stack be linked list based?
- *   - this would eliminate the issue of potentially overruninning the stack (though this would most likely be rare?)
- * 	 - 
- */
 typedef struct {
-	parse_stack_node *data;
+	AST_Node *data;
 	int capacity, length, top;
 } stack;
 
@@ -39,12 +25,25 @@ typedef struct {
 
 parse_stack_node  create_stack_node_terminal(token);
 
-const char*       pctx_type_str(pstack_node_type);
+// Initialization/Destruction
 parse_ctx         pctx_new(int);
 void  						pctx_free(parse_ctx*);
-bool   					  pctx_top_is(parse_ctx*, pstack_node_type[], int);
-void   					  pctx_push(parse_ctx*, parse_stack_node);
-parse_stack_node  pctx_peek(parse_ctx*);
-void 						 	pctx_pop(parse_ctx*);
 
+// Stack operations
+bool   					  pctx_top_is(parse_ctx*, AST_NodeType[], int);
+void   					  pctx_push(parse_ctx*, AST_Node);
+AST_Node          pctx_peek(parse_ctx*);
+void 						 	pctx_pop(parse_ctx*);
+void 							pctx_pop_n(parse_ctx*, int);
+void 							pctx_print_stack(parse_ctx*);
+
+// Parse logic
+// Params:
+//   - token   :  token to reduce
+//   - AST_Node:  pointer to AST_Node to populate
+// Return:
+//   - number of matched nodes
+//   - 0 indicates that nothing was reduced
+int               try_convert_token_to_terminal(token, AST_Node*);
+int 							try_reduce(parse_ctx*, AST_Node*);
 #endif

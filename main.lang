@@ -1,31 +1,34 @@
+// Operators
+//   . pop
+//   , peek
+//   ; duplicate/copy
+//   ' peek and pop
+
 3 5.4 + 2.365 - print .
 3 print .
 
 9 print . // No loops to start off
 5 4 + 3 5 + < print .
 
-if . 0x4 > . 0x2 < || {
+if , 0x4 > , 0x2 < || {
 	"Hello World" print .
 }
 
-userInput prompt {
-	prompt print
-	input   // input can be a built-in
-}
-
-perform a b c d {
+userInput {
+	; print . . .
+	input
 }
 
 "Enter a number : " userInput
 "Enter a second number : " userInput
 "Enter an operator to use : " userInput
 
-switch . {
-	'+':   + break
-	'-':   - break
-	'*':   * break
-	'/':   / break
-	default: break
+switch , {
+	'+'   +
+	'-'   -
+	'*'   *
+	'/'   /
+	default:
 }
 
 print .
