@@ -1,0 +1,4 @@
+out/
+
+# This is for when i run gf2 debugger, it creates an imgui.ini i guess?
+imgui.ini
