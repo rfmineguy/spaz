@@ -18,7 +18,6 @@ make build-tests       # builds tests
 make debug             # starts debugging environment (requires xquartz setup, and the docker container setup)
 ```
 
-
 Usage
 ---
 WIP
