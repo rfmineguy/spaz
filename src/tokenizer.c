@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <regex.h>
+#include <string.h>
 
 regex_t rnew(const char* r) {
 	regex_t reg;
@@ -164,7 +165,6 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	}
 	// Also consume comments
 	while (strncmp(cursor, "//", 2) == 0) {
-		// printf("Consume comment\n");
 		while (*cursor != '\n') {
 			cursor++;
 		}

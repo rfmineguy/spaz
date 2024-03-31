@@ -7,14 +7,14 @@ void ast_print_reserved       (Reserved, int);
 void ast_print_terminal       (Terminal, int);
 void ast_print_term           (Term, int);
 void ast_print_operator       (Operator, int);
-void ast_print_expression     (Expression, int);
-void ast_print_procedure_def  (ProcedureDef, int);
-void ast_print_statement      (Statement, int);
-void ast_print_procedure_call (ProcedureCall, int);
-void ast_print_iff            (Iff, int);
-void ast_print_switch         (Switch, int);
-void ast_print_switch_case    (SwitchCase, int);
-void ast_print_block   				(Block, int);
-void ast_print_switch_block   (SwitchBlock, int);
+void ast_print_expression     (Expression*, int);
+void ast_print_procedure_def  (ProcedureDef*, int);
+void ast_print_statement      (Statement*, int);
+void ast_print_procedure_call (ProcedureCall*, int);
+void ast_print_iff            (Iff*, int);
+void ast_print_switch         (Switch*, int);
+void ast_print_switch_case    (SwitchCase*, int);
+void ast_print_block   				(Block*, int);
+void ast_print_switch_block   (SwitchBlock*, int);
 
 #endif

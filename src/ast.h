@@ -15,10 +15,10 @@
  *    -------------- NON-TERMINALS ----------------------
  * 		term           := <declit> | <hexlit> | <dbllit> | <strlit> | <chrlit>
  * 		operator       := <arith_op> | <logic_op>
- *    expression     := <expression> <expression> <operator> | <operator> | <term> | <stack_op>
+ *    expression     := <expression> <expression> <operator> | <operator> | <term> | <stack_op> | <procedure_call>
  *    procedure_call := <expression> <id>
  * 		procedure      := <id> <block>
- * 		statement  		 := <if> | <switch> | <procedure_call>
+ * 		statement  		 := <if> | <switch>
  * 		statements     := <statement> | <statement> <statements>
  * 		block          := '{' <statements> '}'
  *    if   					 := if <expression> <block>
@@ -52,9 +52,11 @@ typedef enum TermType {
 } TermType;
 typedef enum OperatorType {
 	OPERATOR_TYPE_ARITH,      // operator := <arith_op>
-	OPERATOR_TYPE_LOGIC       // operator := <logic_op>
+	OPERATOR_TYPE_LOGIC,      // operator := <logic_op>
+	OPERATOR_TYPE_STACK			  // operator := <stack_op> ??
 } OperatorType;
 typedef enum ExpressionType {
+	EXPRESSION_TYPE_PROC_CALL,// expression := <expression> <id>
 	EXPRESSION_TYPE_EEO,      // expression := <expression> <expression> <operator>
 	EXPRESSION_TYPE_TERM,     // expression := <term>
 	EXPRESSION_TYPE_STACK_OP, // expression := <stack_op>
@@ -107,6 +109,11 @@ struct Reserved {
 	String_View str;
 };
 
+struct Operator {
+	OperatorType type;
+	char op;
+};
+
 struct Terminal {
 	TerminalType type;
 	union {
@@ -116,7 +123,7 @@ struct Terminal {
 		String_View chr_lit;
 		int integer_lit;
 		double dbl_lit;
-		String_View operatorr;
+		Operator operatorr;
 	};
 };
 
@@ -131,9 +138,9 @@ struct Term {
 	};
 };
 
-struct Operator {
-	OperatorType type;
-	char op;
+struct ProcedureCall {
+	String_View name;
+	int argumentCount;
 };
 
 /** 
@@ -146,13 +153,18 @@ struct Operator {
  */
 struct Expression {
 	ExpressionType type;
-	Term term, term2;
-	char operation;
-};
-
-struct ProcedureCall {
-	String_View name;
-	int argumentCount;
+	union {
+		struct {
+			Expression *left, *right;
+			Operator operation;
+		} EEO;
+		struct {
+			ProcedureCall proc_call;
+		} EProcCall;
+		struct {
+			Term term;
+		} ETerm;
+	};
 };
 
 struct Block {
@@ -200,15 +212,15 @@ struct AST_Node {
 		Terminal terminal;
 		Operator op;
 		Term term;
-		Expression expression;
-		ProcedureDef procDef;
-		Statement statement;
-		ProcedureCall procedureCall;
-		Iff iff;
-		Switch switchf;
-		SwitchCase casef;
-		Block block;
-		SwitchBlock switchBlock;
+		Expression *expression;
+		ProcedureDef *procDef;
+		Statement *statement;
+		ProcedureCall *procedureCall;
+		Iff *iff;
+		Switch *switchf;
+		SwitchCase *casef;
+		Block *block;
+		SwitchBlock *switchBlock;
 	};
 };
 

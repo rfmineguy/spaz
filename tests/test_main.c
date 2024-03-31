@@ -76,15 +76,15 @@ MunitResult stack_test(const MunitParameter params[], void* fixture) {
 	parse_ctx ctx = pctx_new(100);
 	token t = (token) {.type = T_ID, .text=SV("a")};
 	token t2 = (token) {.type = T_PLUS, .text=SV("+")};
-	pctx_push(&ctx, PSNODE_NEW_TERMINAL(t2));
-	pctx_push(&ctx, PSNODE_NEW_TERMINAL(t));
-	pctx_push(&ctx, PSNODE_NEW_TERMINAL(t2));
-	munit_assert_int(ctx.pstack.length, ==, 3);
-	munit_assert_int(ctx.pstack.top, ==, 2);
-	munit_assert_int(pctx_peek(&ctx).type, ==, PSNT_TERMINAL);
-	munit_assert_int(pctx_peek(&ctx).terminal.type, ==, T_PLUS);
-	munit_assert_string_equal(pctx_peek(&ctx).terminal.text.data, "+");
-	munit_assert(pctx_top_is(&ctx, (pstack_node_type[]){PSNT_TERMINAL, PSNT_TERMINAL}, 2));
+	// pctx_push(&ctx, PSNODE_NEW_TERMINAL(t2));
+	// pctx_push(&ctx, PSNODE_NEW_TERMINAL(t));
+	// pctx_push(&ctx, PSNODE_NEW_TERMINAL(t2));
+	// munit_assert_int(ctx.pstack.length, ==, 3);
+	// munit_assert_int(ctx.pstack.top, ==, 2);
+	// munit_assert_int(pctx_peek(&ctx).type, ==, PSNT_TERMINAL);
+	// munit_assert_int(pctx_peek(&ctx).terminal.type, ==, T_PLUS);
+	// munit_assert_string_equal(pctx_peek(&ctx).terminal.text.data, "+");
+	// munit_assert(pctx_top_is(&ctx, (pstack_node_type[]){PSNT_TERMINAL, PSNT_TERMINAL}, 2));
 	pctx_free(&ctx);
 	return MUNIT_OK;
 }

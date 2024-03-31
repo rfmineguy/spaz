@@ -2,6 +2,7 @@
 #include "ast.h"
 #include "ast_helper.h"
 #include "interpreter.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -41,17 +42,25 @@ void pctx_free(parse_ctx *pctx) {
 	pctx->pstack.data = NULL;
 }
 
+// @Deprecated
 bool pctx_top_is(parse_ctx* pctx, AST_NodeType types[], int size) {
 	// If there is nothing on the stack, how could it possibly be equal?
-	if (pctx->pstack.length < size && pctx->pstack.top != -1)
+	if (pctx->pstack.length < size && pctx->pstack.top != -1) {
+		fprintf(stderr, "Stack not big enough to check %d\n", size);
+		// Debugging print
+		// for (int i = 0; i < size; i++) {
+		// 	printf("%d\n", types[i]);
+		// }
 		return false;
+	}
 
 	int start = pctx->pstack.top;
 	int end   = start - size;
-	if (end < -1)
+	if (end < -1) {
 		return false;
+	}
 	for (int i = start; i > end; i--) {
-		if (types[i - pctx->pstack.top] != pctx->pstack.data[i].nodeType) {
+		if (types[i - pctx->pstack.top] != pctx->pstack.data[size - i].nodeType) {
 			return false;
 		}
 	}
@@ -64,16 +73,23 @@ void pctx_push(parse_ctx* pctx, AST_Node node) {
 		pctx->pstack.data = realloc(pctx->pstack.data, pctx->pstack.capacity * 2);
 		pctx->pstack.capacity *= 2;
 	}
-	pctx->pstack.data[pctx->pstack.top] = node;
-	pctx->pstack.top++;
+	pctx->pstack.top++;     // must increment first as top starts at -1
 	pctx->pstack.length++;
+	pctx->pstack.data[pctx->pstack.top] = node;
 }
 
 AST_Node pctx_peek(parse_ctx* pctx) {
 	if (pctx->pstack.length == 0) {
 		return (AST_Node){}; // shouldn't happen. lol, famous last words
 	}
-	return pctx->pstack.data[pctx->pstack.top - 1];
+	return pctx->pstack.data[pctx->pstack.top];
+}
+
+AST_Node pctx_peek_offset(parse_ctx* pctx, int n) {
+	if (pctx->pstack.length <= n) {
+		return (AST_Node){}; // shouldn't happen. lol, famous last words
+	}
+	return pctx->pstack.data[pctx->pstack.top - n];
 }
 
 void pctx_pop(parse_ctx* pctx) {
@@ -93,6 +109,7 @@ void pctx_pop_n(parse_ctx* pctx, int n) {
 
 void pctx_print_stack(parse_ctx* pctx) {
 	for (int i = 0; i < pctx->pstack.length; i++) {
+		printf("%d\n", i);
 		ast_print_node(pctx->pstack.data[i], 0);
 	}
 }
@@ -102,7 +119,7 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 	Terminal t;
 	int status = 0; // 0 indicates no reduction
 	switch (tok.type) {
-		case T_ID: 
+		case T_ID:
 			nt = AST_NODE_TYPE_TERMINAL;
 			t = P_NEW_TERMINAL(TERMINAL_TYPE_IDENTIFIER, .id=tok.text);
 			status = 1;
@@ -113,8 +130,9 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 			status = 1;
 			break;
 		case T_DOUBLE_LIT:
+			// printf("DoubleLit\n");
 			nt = AST_NODE_TYPE_TERMINAL;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_DOUBLE_LIT, .dbl_lit=interpret_double_sv_to_double(tok.text));
+			t = P_NEW_TERMINAL(TERMINAL_TYPE_DOUBLE_LIT, .dbl_lit=interpret_double_sv_to_double(tok.text));
 			status = 1;
 			break;
 		case T_DECIMAL_LIT:
@@ -133,18 +151,18 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 			status = 1;
 			break;
 		case T_LOGIC_BEG...T_LOGIC_END:
-			nt = AST_NODE_TYPE_TERMINAL;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_LOGIC_OP, .operatorr=tok.text);
+			nt = AST_NODE_TYPE_OPERATOR;
+			t=P_NEW_TERMINAL(TERMINAL_TYPE_LOGIC_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_LOGIC, .op=tok.text.data[0]}));
 			status = 1;
 			break;
 		case T_STACK_BEG...T_STACK_END:
-			nt = AST_NODE_TYPE_TERMINAL;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_STACK_OP, .operatorr=tok.text);
+			nt = AST_NODE_TYPE_OPERATOR;
+			t=P_NEW_TERMINAL(TERMINAL_TYPE_STACK_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_STACK, .op=tok.text.data[0]}));
 			status = 1;
 			break;
 		case T_ARITH_BEG...T_ARITH_END:
-			nt = AST_NODE_TYPE_TERMINAL;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_ARITH_OP, .operatorr=tok.text);
+			nt = AST_NODE_TYPE_OPERATOR;
+			t=P_NEW_TERMINAL(TERMINAL_TYPE_ARITH_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_ARITH, .op=tok.text.data[0]}));
 			status = 1;
 			break;
 		case T_RESERVE_BEG...T_RESERVE_END:
@@ -158,6 +176,101 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 	return status;
 }
 
+// See ast.h for grammar reference
 int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
-	return 0;
+	*out_n = (AST_Node){0};
+
+	// term -> expression
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_TERM) {
+		AST_Node n = pctx_peek(pctx);
+		out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
+		out_n->expression = calloc(1, sizeof(Expression));
+		out_n->expression->type = EXPRESSION_TYPE_TERM;
+		out_n->expression->ETerm.term = n.term;
+		return 1;
+	}
+
+	// expression expression op -> expression
+	if (pctx_peek_offset(pctx, 2).nodeType == AST_NODE_TYPE_EXPRESSION &&
+			pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_EXPRESSION &&
+			pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_OPERATOR) {
+		AST_Node expr1 = pctx_peek_offset(pctx, 2);
+		AST_Node expr2 = pctx_peek_offset(pctx, 1);
+		AST_Node operator = pctx_peek_offset(pctx, 0);
+		out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
+		out_n->expression = malloc(sizeof(Expression));
+		out_n->expression->type = EXPRESSION_TYPE_EEO;
+		out_n->expression->EEO.left = expr1.expression;
+		out_n->expression->EEO.right = expr2.expression;
+		out_n->expression->EEO.operation = operator.terminal.operatorr;
+		return 3;
+	}
+
+	// expression id -> procedure_call 
+	if (pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_EXPRESSION &&
+			pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_TERMINAL &&
+			pctx_peek_offset(pctx, 0).terminal.type == TERMINAL_TYPE_IDENTIFIER) {
+		AST_Node expr = pctx_peek_offset(pctx, 1);
+		AST_Node id = pctx_peek_offset(pctx, 0);
+		out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
+		out_n->expression = malloc(sizeof(Expression));
+		out_n->expression->type = EXPRESSION_TYPE_PROC_CALL;
+		out_n->expression->EProcCall.proc_call.name = id.terminal.id;
+		return 1;
+	}
+
+	// reduce terminals
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_TERMINAL) {
+		AST_Node n = pctx_peek(pctx);
+		switch (n.terminal.type) {
+			case TERMINAL_TYPE_RESERVED:
+			case TERMINAL_TYPE_IDENTIFIER:
+				// no reduction for these
+				return 0;
+			case TERMINAL_TYPE_HEX_LIT:
+				out_n->nodeType = AST_NODE_TYPE_TERM;
+				out_n->term.type = TERM_TYPE_HEX_LIT;
+				out_n->term._integer = n.term._integer;
+				return 1;
+			case TERMINAL_TYPE_DOUBLE_LIT:
+				out_n->nodeType = AST_NODE_TYPE_TERM;
+				out_n->term.type = TERM_TYPE_DOUBLE_LIT;
+				out_n->term._double = n.term._double;
+				return 1;
+			case TERMINAL_TYPE_DEC_LIT:
+				out_n->nodeType = AST_NODE_TYPE_TERM;
+				out_n->term.type = TERM_TYPE_DEC_LIT;
+				out_n->term._integer = n.term._integer;
+				return 1;
+			case TERMINAL_TYPE_STRING_LIT:
+				out_n->nodeType = AST_NODE_TYPE_TERM;
+				out_n->term.type = TERM_TYPE_STRING_LIT;
+				out_n->term._string = n.term._string;
+				return 1;
+			case TERMINAL_TYPE_CHAR_LIT:
+				out_n->nodeType = AST_NODE_TYPE_TERM;
+				out_n->term.type = TERM_TYPE_CHR_LIT;
+				out_n->term._chr = n.term._chr;
+				return 1;
+			case TERMINAL_TYPE_LOGIC_OP:
+				out_n->nodeType = AST_NODE_TYPE_OPERATOR;
+				out_n->op.type = OPERATOR_TYPE_LOGIC;
+				out_n->op = n.terminal.operatorr;
+				return 1;
+			case TERMINAL_TYPE_ARITH_OP:
+				out_n->nodeType = AST_NODE_TYPE_OPERATOR;
+				out_n->op.type = OPERATOR_TYPE_ARITH;
+				out_n->op = n.terminal.operatorr;
+				return 1;
+			case TERMINAL_TYPE_STACK_OP:
+				assert(0 && "Stack op not implemented properly");
+				out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
+				out_n->expression = calloc(1, sizeof(Expression));
+				out_n->expression->type = EXPRESSION_TYPE_STACK_OP;
+				out_n->expression->EEO.operation = n.terminal.operatorr;
+				return 1;
+		}
+	}
+
+	return 0; // didn't reduce anything
 }

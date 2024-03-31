@@ -4,11 +4,13 @@
 #include "tokenizer.h"
 
 #define PSNODE_NEW_TERMINAL(t) (parse_stack_node) {.node.type=PSNT_TERMINAL, .terminal=t}
-#define PSNODE_NEW_TERM(type, v) (parse_stack_node) {}
+#define PSNODE_NEW_TERM(ttype, v) (parse_stack_node) {.node.type=PSNT_TERM, .term=(Term){.type=(ttype), (v)}}
 #define NT_LIST(...) (AST_NodeType[]) { __VA_ARGS__ }
 
 #define P_NEW_TERMINAL(type_, expr) \
 	(Terminal) {.type=type_, expr}
+#define P_NEW_TERM(type_, expr) \
+	(Term) {.type=type_, expr}
 
 typedef struct parse_stack_node {
 	AST_Node node;
@@ -33,6 +35,7 @@ void  						pctx_free(parse_ctx*);
 bool   					  pctx_top_is(parse_ctx*, AST_NodeType[], int);
 void   					  pctx_push(parse_ctx*, AST_Node);
 AST_Node          pctx_peek(parse_ctx*);
+AST_Node          pctx_peek_offset(parse_ctx*, int);
 void 						 	pctx_pop(parse_ctx*);
 void 							pctx_pop_n(parse_ctx*, int);
 void 							pctx_print_stack(parse_ctx*);
