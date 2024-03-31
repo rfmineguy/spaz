@@ -71,6 +71,7 @@ typedef enum StatementType {
 	STATEMENT_TYPE_BLOCK            // statement := <block>
 } StatementType;
 
+typedef struct Program Program;
 typedef struct Reserved Reserved;
 typedef struct Terminal Terminal;
 typedef struct Term Term;
@@ -87,6 +88,7 @@ typedef struct SwitchBlock SwitchBlock;
 
 typedef enum AST_NodeType {
 	AST_NODE_TYPE_UNDEFINED,
+	AST_NODE_TYPE_PROGRAM,
 	AST_NODE_TYPE_RESERVED,
 	AST_NODE_TYPE_TERMINAL,
 	AST_NODE_TYPE_TERM,
@@ -103,6 +105,10 @@ typedef enum AST_NodeType {
 } AST_NodeType;
 
 typedef struct AST_Node AST_Node;
+
+struct Program {
+	cvector_vector_type(AST_Node) p;
+};
 
 struct Reserved {
 	token_type type;
@@ -208,6 +214,7 @@ struct Statement {
 struct AST_Node {
 	AST_NodeType nodeType;
 	union {
+		Program program;
 		Reserved reserved;
 		Terminal terminal;
 		Operator op;

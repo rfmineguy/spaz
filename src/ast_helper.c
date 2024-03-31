@@ -5,6 +5,7 @@
 void ast_print_node(AST_Node node, int depth) {
 	switch (node.nodeType) {
 	case AST_NODE_TYPE_UNDEFINED:      printf("Node {UNDEFINED}\n"); break;
+	case AST_NODE_TYPE_PROGRAM: 			 ast_print_program(node.program, depth); break;
 	case AST_NODE_TYPE_RESERVED:       ast_print_reserved(node.reserved, depth); break;
 	case AST_NODE_TYPE_TERMINAL:       ast_print_terminal(node.terminal, depth); break;
 	case AST_NODE_TYPE_TERM:           ast_print_term(node.term, depth); break;
@@ -21,6 +22,14 @@ void ast_print_node(AST_Node node, int depth) {
 	default:   												 assert(0 && "Unimplemented ast node type");
 	}
 }
+
+void ast_print_program  			(Program prog, int depth) {
+	printf("%*cProgram: \n", depth * 2, ' ');
+	for (AST_Node* it = cvector_begin(prog.p); it != cvector_end(prog.p); it++) {
+		ast_print_node(*it, depth+1);
+	}
+}
+
 void ast_print_reserved       (Reserved reserved, int depth) {
 	printf("Reserved...\n");
 }

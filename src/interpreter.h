@@ -1,6 +1,7 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 #include "sv.h"
+#include "ast.h"
 
 #define STACK_SIZE 500
 
@@ -23,8 +24,6 @@ typedef struct {
 	int        stack_top;
 } interpreter_ctx;
 
-int interpret_decimal_sv_to_int(String_View);
-int interpret_hex_sv_to_int(String_View);
-double interpret_double_sv_to_double(String_View);
-
+interpreter_ctx ictx_new();
+void  					ictx_run(interpreter_ctx*, Program);
 #endif

@@ -3,6 +3,7 @@
 #include "ast.h"
 
 void ast_print_node           (AST_Node, int);
+void ast_print_program  			(Program, int);
 void ast_print_reserved       (Reserved, int);
 void ast_print_terminal       (Terminal, int);
 void ast_print_term           (Term, int);
