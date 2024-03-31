@@ -102,31 +102,9 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 					switch (exp->EEO.operation.op) {
 						case '+':
 							{
-								// DBL + DBL = DBL
-								// DBL + INT = DBL
-								// INT + DBL = DBL
-								if (l.type == DOUBLE || r.type == DOUBLE) {
-									ictx->stack[++ictx->stack_top].type = DOUBLE;
-									// INT + DBL
-									if (l.type == INTEGER) {
-										ictx->stack[ictx->stack_top].doubleLiteral = l.integerLiteral + r.doubleLiteral;
-									}
-									// DBL + INT
-									else if (r.type == INTEGER) {
-										ictx->stack[ictx->stack_top].doubleLiteral = l.doubleLiteral + r.integerLiteral;
-									}
-									// DBL + DBL
-									else {
-										ictx->stack[ictx->stack_top].doubleLiteral = l.doubleLiteral + r.doubleLiteral;
-									}
-									break;
-								}
-								// INT + INT = INT
-								if (l.type == INTEGER && r.type == INTEGER) {
-									ictx->stack[++ictx->stack_top].type = INTEGER;
-									ictx->stack[ictx->stack_top].integerLiteral = l.integerLiteral + r.integerLiteral;
-									break;
-								}
+								stack_node n = ictx_perform_addition(l, r);
+								ictx->stack[++ictx->stack_top] = n;
+								break;
 							}
 					}
 				} break;
@@ -134,6 +112,38 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 				// ictx->stack[ictx->stack_top].type = 
 		}
 	}
+}
+
+stack_node ictx_perform_addition(stack_node l, stack_node r) {
+	// DBL + DBL = DBL
+	// DBL + INT = DBL
+	// INT + DBL = DBL
+	stack_node n;
+	if (l.type == DOUBLE || r.type == DOUBLE) {
+		n.type = DOUBLE;
+		// INT + DBL
+		if (l.type == INTEGER) {
+			n.doubleLiteral = l.integerLiteral + r.doubleLiteral;
+			return n;
+		}
+		// DBL + INT
+		else if (r.type == INTEGER) {
+			n.doubleLiteral = l.doubleLiteral + r.integerLiteral;
+			return n;
+		}
+		// DBL + DBL
+		else {
+			n.doubleLiteral = l.doubleLiteral + r.doubleLiteral;
+			return n;
+		}
+	}
+	// INT + INT = INT
+	if (l.type == INTEGER && r.type == INTEGER) {
+		n.type = INTEGER;
+		n.integerLiteral = l.integerLiteral + r.integerLiteral;
+		return n;
+	}
+	assert(0 && "This type of addition is not supported");
 }
 
 void ictx_run(interpreter_ctx* ictx, Program p) {
