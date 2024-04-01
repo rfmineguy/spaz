@@ -6,9 +6,22 @@
 #include "parser.h"
 #include <stdio.h>
 #include <assert.h>
+#include "../gengetopt/cmdline.h"
 
-int main() {
-	tokenizer_ctx ctx = tctx_from_file("shorter.lang");
+int main(int argc, char** argv) {
+	struct gengetopt_args_info ai;
+	if (cmdline_parser(argc, argv, &ai) != 0) {
+		fprintf(stderr, "Failed to parse arguments\n");
+		return 1;
+	}
+
+	if (!ai.file_given) {
+		fprintf(stderr, "No file specified\n");
+		// cmdline_parser_print_help();
+		return 2;
+	}
+
+	tokenizer_ctx ctx = tctx_from_file(ai.file_arg);
 	parse_ctx pctx = pctx_new(100);
 	AST_Node program = (AST_Node) {.nodeType=AST_NODE_TYPE_PROGRAM};
 
@@ -37,4 +50,5 @@ int main() {
 	ictx_run(&ictx, program.program);
 
 	tctx_free(&ctx);
+	cmdline_parser_free(&ai);
 }

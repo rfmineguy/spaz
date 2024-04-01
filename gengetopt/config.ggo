@@ -1,0 +1,9 @@
+package "sli"
+version "1.0.0"
+purpose "Interpreter"
+usage "<usage>"
+description "StackLang interpreter"
+versiontext "Developed by Riley Fischer"
+
+option "file" f "" string optional
+option "ptree" p "" optional
