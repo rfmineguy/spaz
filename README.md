@@ -24,5 +24,5 @@ Usage
 WIP
 ```
 sh
-./out/
+./out/spaz
 ```
