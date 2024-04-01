@@ -19,6 +19,14 @@ make build-tests       # builds tests
 make debug             # starts debugging environment (requires xquartz setup, and the docker container setup)
 ```
 
+Install
+---
+```
+sh
+export INSTALL_DIR=<dir> # specify directory to install spaz to (default=/usr/local/bin)
+make install
+```
+
 Usage
 ---
 WIP

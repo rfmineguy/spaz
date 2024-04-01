@@ -6,7 +6,12 @@ TEST_SOURCES := tests/test_main.c tests/munit/munit.c
 
 BIN := spaz
 
-.PHONY: clean always
+#default install directory
+ifndef INSTALL_DIR
+INSTALL_DIR := /usr/local/bin/
+endif
+
+.PHONY: clean always install
 .PHONY: build-all build-interpreter build-tests
 .PHONY: run-tests
 .PHONY: gengetopt
@@ -32,3 +37,8 @@ out/main:
 	gcc $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/$(BIN) -lm
 out/test_main:
 	gcc $(TEST_SOURCES) $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/test_main -lm
+
+install:
+	@echo "Installing to $(INSTALL_DIR)"
+	sudo install -d $(INSTALL_DIR)
+	sudo install -m 557 out/$(BIN) $(INSTALL_DIR)
