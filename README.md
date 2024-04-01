@@ -11,8 +11,7 @@ The name spaz comes from "spastic", which means "relating to or affected by musc
 
 Build
 ---
-```
-sh
+```sh
 make build-all         # builds everything (interpreter, tests)
 make build-interpreter # builds interpreter
 make build-tests       # builds tests
@@ -21,8 +20,7 @@ make debug             # starts debugging environment (requires xquartz setup, a
 
 Install
 ---
-```
-sh
+```sh
 export INSTALL_DIR=<dir> # specify directory to install spaz to (default=/usr/local/bin)
 make install
 ```
@@ -30,7 +28,6 @@ make install
 Usage
 ---
 WIP
-```
-sh
+```sh
 ./out/spaz
 ```
