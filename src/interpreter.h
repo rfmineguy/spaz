@@ -30,5 +30,6 @@ void  					ictx_run(interpreter_ctx*, Program);
 
 // actions
 stack_node ictx_perform_addition(stack_node, stack_node);
+stack_node ictx_perform_subtraction(stack_node, stack_node);
 void ictx_process_expression(interpreter_ctx*, Expression*);
 #endif

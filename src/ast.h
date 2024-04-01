@@ -19,7 +19,7 @@
  *    procedure_call := <expression> <id>
  * 		procedure      := <id> <block>
  * 		statement  		 := <if> | <switch>
- * 		statements     := <statement> | <statement> <statements>
+ * 		statements     := <statement> <statements> | null
  * 		block          := '{' <statements> '}'
  *    if   					 := if <expression> <block>
  *    switch				 := switch <stack_op> <switch-block>

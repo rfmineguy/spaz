@@ -97,12 +97,18 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 			case OPERATOR_TYPE_ARITH:
 				{
 					// the stack SHOULD have the two values to add
-					stack_node l = ictx->stack[ictx->stack_top--];
 					stack_node r = ictx->stack[ictx->stack_top--];
+					stack_node l = ictx->stack[ictx->stack_top--];
 					switch (exp->EEO.operation.op) {
 						case '+':
 							{
 								stack_node n = ictx_perform_addition(l, r);
+								ictx->stack[++ictx->stack_top] = n;
+								break;
+							}
+						case '-':
+							{
+								stack_node n = ictx_perform_subtraction(l, r);
 								ictx->stack[++ictx->stack_top] = n;
 								break;
 							}
@@ -115,32 +121,58 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 }
 
 stack_node ictx_perform_addition(stack_node l, stack_node r) {
-	// DBL + DBL = DBL
-	// DBL + INT = DBL
-	// INT + DBL = DBL
 	stack_node n;
-	if (l.type == DOUBLE || r.type == DOUBLE) {
+	// INT + DBL
+	if (l.type == INTEGER && r.type == DOUBLE) {
 		n.type = DOUBLE;
-		// INT + DBL
-		if (l.type == INTEGER) {
-			n.doubleLiteral = l.integerLiteral + r.doubleLiteral;
-			return n;
-		}
-		// DBL + INT
-		else if (r.type == INTEGER) {
-			n.doubleLiteral = l.doubleLiteral + r.integerLiteral;
-			return n;
-		}
-		// DBL + DBL
-		else {
-			n.doubleLiteral = l.doubleLiteral + r.doubleLiteral;
-			return n;
-		}
+		n.doubleLiteral = l.integerLiteral + r.doubleLiteral;
+		return n;
 	}
-	// INT + INT = INT
-	if (l.type == INTEGER && r.type == INTEGER) {
+	// DBL + INT
+	else if (l.type == DOUBLE && r.type == INTEGER) {
+		n.type = DOUBLE;
+		n.doubleLiteral = l.doubleLiteral + r.integerLiteral;
+		return n;
+	}
+	// DBL + DBL
+	else if (l.type == DOUBLE && r.type == DOUBLE) {
+		n.type = DOUBLE;
+		n.doubleLiteral = l.doubleLiteral + r.doubleLiteral;
+		return n;
+	}
+	// INT + INT
+	else if (l.type == INTEGER && r.type == INTEGER) {
 		n.type = INTEGER;
 		n.integerLiteral = l.integerLiteral + r.integerLiteral;
+		return n;
+	}
+	assert(0 && "This type of addition is not supported");
+}
+
+stack_node ictx_perform_subtraction(stack_node l, stack_node r) {
+	stack_node n;
+	// INT + DBL
+	if (l.type == INTEGER && r.type == DOUBLE) {
+		n.type = DOUBLE;
+		n.doubleLiteral = l.integerLiteral - r.doubleLiteral;
+		return n;
+	}
+	// DBL + INT
+	else if (l.type == DOUBLE && r.type == INTEGER) {
+		n.type = DOUBLE;
+		n.doubleLiteral = l.doubleLiteral - r.integerLiteral;
+		return n;
+	}
+	// DBL + DBL
+	else if (l.type == DOUBLE && r.type == DOUBLE) {
+		n.type = DOUBLE;
+		n.doubleLiteral = l.doubleLiteral - r.doubleLiteral;
+		return n;
+	}
+	// INT + INT
+	else if (l.type == INTEGER && r.type == INTEGER) {
+		n.type = INTEGER;
+		n.integerLiteral = l.integerLiteral - r.integerLiteral;
 		return n;
 	}
 	assert(0 && "This type of addition is not supported");

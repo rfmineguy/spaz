@@ -226,7 +226,6 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		switch (n.terminal.type) {
 			case TERMINAL_TYPE_RESERVED:
 			case TERMINAL_TYPE_IDENTIFIER:
-				// no reduction for these
 				return 0;
 			case TERMINAL_TYPE_HEX_LIT:
 				out_n->nodeType = AST_NODE_TYPE_TERM;
