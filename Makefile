@@ -26,7 +26,7 @@ debug:
 	docker run --rm -it -e DISPLAY=192.168.1.142:0 -v $(shell pwd):$(shell pwd) -w $(shell pwd) alpine gf2 ./out/$(BIN)_x86
 gengetopt:
 	mkdir -p gengetopt
-	gengetopt --input=gengetopt/config.ggo --include-getopt
+	gengetopt --input=config.ggo --include-getopt
 	mv cmdline.* gengetopt/
 out/main:
 	gcc $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/$(BIN) -lm
