@@ -118,6 +118,12 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 								ictx->stack[++ictx->stack_top] = n;
 								break;
 							}
+						case '/':
+							{
+								stack_node n = ictx_perform_division(l, r);
+								ictx->stack[++ictx->stack_top] = n;
+								break;
+							}
 					}
 				} break;
 			default: assert(0 && "StackOP, and LogicOp not implemented");
@@ -208,6 +214,35 @@ stack_node ictx_perform_mult(stack_node l, stack_node r) {
 	else if (l.type == INTEGER && r.type == INTEGER) {
 		n.type = INTEGER;
 		n.integerLiteral = l.integerLiteral * r.integerLiteral;
+		return n;
+	}
+	assert(0 && "This type of addition is not supported");
+}
+
+stack_node ictx_perform_division(stack_node l, stack_node r) {
+	stack_node n;
+	// INT + DBL
+	if (l.type == INTEGER && r.type == DOUBLE) {
+		n.type = DOUBLE;
+		n.doubleLiteral = l.integerLiteral / r.doubleLiteral;
+		return n;
+	}
+	// DBL + INT
+	else if (l.type == DOUBLE && r.type == INTEGER) {
+		n.type = DOUBLE;
+		n.doubleLiteral = l.doubleLiteral / r.integerLiteral;
+		return n;
+	}
+	// DBL + DBL
+	else if (l.type == DOUBLE && r.type == DOUBLE) {
+		n.type = DOUBLE;
+		n.doubleLiteral = l.doubleLiteral / r.doubleLiteral;
+		return n;
+	}
+	// INT + INT
+	else if (l.type == INTEGER && r.type == INTEGER) {
+		n.type = INTEGER;
+		n.integerLiteral = l.integerLiteral / r.integerLiteral;
 		return n;
 	}
 	assert(0 && "This type of addition is not supported");

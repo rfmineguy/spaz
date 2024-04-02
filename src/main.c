@@ -47,7 +47,9 @@ int main(int argc, char** argv) {
 	for (int i = 0; i <= pctx.pstack.top; i++) {
 		cvector_push_back(program.program.p, pctx.pstack.data[i]);
 	}
-	//ast_print_program(program.program, 0);
+	if (ai.ptree_given) {
+		ast_print_program(program.program, 0);
+	}
 
 	interpreter_ctx ictx = ictx_new();
 	ictx_run(&ictx, program.program);
