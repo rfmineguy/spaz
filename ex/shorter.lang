@@ -6,4 +6,10 @@
 9 5 + 2 + 5 - 3 * print
 9 5 - 2 + print
 9 4 + 2 / 8 * print
-"Hello" print
+"Hello"
+print .
+print .
+print
+
+if 4 5 > {
+}

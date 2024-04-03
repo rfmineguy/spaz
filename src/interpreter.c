@@ -80,9 +80,9 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 		}
 		return;
 	}
-	if (exp->type == EXPRESSION_TYPE_STACK_OP) {
-		assert(0 && "Stack op not implemented");
-	}
+	// if (exp->type == EXPRESSION_TYPE_STACK_OP) {
+	// 	assert(0 && "Stack op not implemented");
+	// }
 	if (exp->type == EXPRESSION_TYPE_PROC_CALL) {
 		if (sv_eq(exp->EProcCall.proc_call.name, SV("print"))) {
 			stack_node l = ictx->stack[ictx->stack_top];
@@ -240,9 +240,6 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 		 */
 		if (sv_eq(exp->EEO.operation.op, SV("&&"))) {
 			stack_node n = (stack_node) {.type=UNDEFINED};
-			// ARITH_OPERATION(l, r, DOUBLE,  DOUBLE,  INTEGER, n.integerLiteral = l.doubleLiteral  && r.doubleLiteral);
-			// ARITH_OPERATION(l, r, INTEGER, DOUBLE,  INTEGER, n.integerLiteral = l.integerLiteral && r.doubleLiteral);
-			// ARITH_OPERATION(l, r, DOUBLE,  INTEGER, INTEGER, n.integerLiteral = l.doubleLiteral  && r.doubleLiteral);
 			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral && r.integerLiteral);
 			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
 				'<',
@@ -250,6 +247,37 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 				exp->state.line, exp->state.col
 			);
 			ictx->stack[++ictx->stack_top] = n;
+			return;
+		}
+		/**
+		 *   Operation: ||
+		 */
+		if (sv_eq(exp->EEO.operation.op, SV("||"))) {
+			stack_node n = (stack_node) {.type=UNDEFINED};
+			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral || r.integerLiteral);
+			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
+				'<',
+				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
+				exp->state.line, exp->state.col
+			);
+			ictx->stack[++ictx->stack_top] = n;
+			return;
+		}
+		/**
+		 *    Operation: .
+		 *    Functon: Pop the top of the stack
+		 */
+		if (sv_eq(exp->EEO.operation.op, SV("."))) {
+			ictx->stack_top--;
+			return;
+		}
+		/**
+		 *    Operation: ;
+		 *    Function: Duplicate the top of the stack
+		 */
+		if (sv_eq(exp->EEO.operation.op, SV(";"))) {
+			stack_node n = ictx->stack[ictx->stack_top];
+			ictx->stack[ictx->stack_top++] = n;
 			return;
 		}
 

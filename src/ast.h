@@ -13,13 +13,24 @@
  * 		arith_op       := '+' | '-' | '*' | '/' | '%'
  * 		logic_op       := "&&" | "||" | '>' | '<' | "==" | ">=" | "<="
  *    -------------- NON-TERMINALS ----------------------
- * 		term           := <declit> | <hexlit> | <dbllit> | <strlit> | <chrlit>
- * 		operator       := <arith_op> | <logic_op>
- *    expression     := <expression> <expression> <operator> | <operator> | <term> | <stack_op> | <procedure_call>
+ * 		term           := <declit> 
+ * 										| <hexlit> 
+ * 										| <dbllit> 
+ * 										| <strlit> 
+ * 										| <chrlit>
+ * 		operator       := <arith_op> 
+ * 										| <logic_op>
+ *    expression     := <expression> <expression> <operator> 
+ *    								| <operator> 
+ *    								| <term> 
+ *    								| <stack_op> 
+ *    								| <procedure_call>
  *    procedure_call := <expression> <id>
  * 		procedure      := <id> <block>
- * 		statement  		 := <if> | <switch>
- * 		statements     := <statement> <statements> | null
+ * 		statement  		 := <if> 
+ * 										| <switch>
+ * 		statements     := <statement> <statements> 
+ * 		                | null
  * 		block          := '{' <statements> '}'
  *    if   					 := if <expression> <block>
  *    switch				 := switch <stack_op> <switch-block>

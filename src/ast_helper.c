@@ -62,9 +62,9 @@ void ast_print_term           (Term term, int depth) {
 void ast_print_operator       (Operator op, int depth) {
 	printf("%*cOperator: \n", depth * 2, ' ');
 	switch (op.type) {
-		case OPERATOR_TYPE_ARITH: printf("%*cArithOp = %c\n", (depth + 1) * 2, ' ', op.op); break;
-		case OPERATOR_TYPE_LOGIC: printf("%*cLogicOp = %c\n", (depth + 1) * 2, ' ', op.op); break;
-		case OPERATOR_TYPE_STACK: printf("%*cStackOp = %c\n", (depth + 1) * 2, ' ', op.op); break;
+		case OPERATOR_TYPE_ARITH: printf("%*cArithOp = " SV_Fmt "\n", (depth + 1) * 2, ' ', SV_Arg(op.op)); break;
+		case OPERATOR_TYPE_LOGIC: printf("%*cLogicOp = " SV_Fmt "\n", (depth + 1) * 2, ' ', SV_Arg(op.op)); break;
+		case OPERATOR_TYPE_STACK: printf("%*cStackOp = " SV_Fmt "\n", (depth + 1) * 2, ' ', SV_Arg(op.op)); break;
 		default: printf("%*cUnknown: %d\n", (depth + 1) * 2, ' ', op.type);
 	}
 }

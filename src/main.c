@@ -38,9 +38,16 @@ int main(int argc, char** argv) {
 			continue;
 		}
 
+		int reduceCount = 0;
 		while ((p = try_reduce(&pctx, &n)) != 0) {
+			reduceCount++;
 			pctx_pop_n(&pctx, p);
 			pctx_push(&pctx, n);
+		}
+		if (reduceCount == 0) {
+			fprintf(stderr, "%s\n", ctx.state.cursor);
+			fprintf(stderr, "No reduction rule available\n");
+			return 3;
 		}
 	}
 
