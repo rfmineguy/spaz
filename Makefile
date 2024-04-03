@@ -1,6 +1,7 @@
 CFLAGS := -ggdb
 SOURCES := src/main.c src/interpreter.c src/svimpl.c \
-					 src/tokenizer.c src/parser.c src/ast_helper.c
+					 src/tokenizer.c src/parser.c src/ast_helper.c \
+					 src/b_stacktrace_impl.c
 GETOPT_SOURCES := gengetopt/cmdline.c
 TEST_SOURCES := tests/test_main.c tests/munit/munit.c
 

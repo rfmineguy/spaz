@@ -40,15 +40,16 @@ typedef enum token_type {
 	T_EOF, T_SPACE, T_UNKNOWN
 } token_type;
 
-typedef struct token {
-	token_type type;
-	String_View text;
-} token;
-
 typedef struct tokenizer_state {
 	char const *cursor;
 	int line, col, index;
 } tokenizer_state;
+
+typedef struct token {
+	token_type type;
+	String_View text;
+	tokenizer_state state;
+} token;
 
 typedef struct tokenizer_ctx {
 	char const *content;

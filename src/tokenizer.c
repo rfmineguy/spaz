@@ -132,7 +132,11 @@ void tctx_free(tokenizer_ctx* ctx) {
 		if (rmatch(ctx->state.cursor, str, &length) != -1) {\
 			const char* was = ctx->state.cursor;\
 			/* ctx->state.cursor += length;*/\
-			return (token) {.type = t, .text=(sv_from_parts(was, length))};\
+			return (token) {\
+				.type = t,\
+				.text=(sv_from_parts(was, length)),\
+				.state = ctx->state\
+			};\
 		}\
 	} while(0)
 
@@ -142,7 +146,11 @@ void tctx_free(tokenizer_ctx* ctx) {
 		if (*ctx->state.cursor == c) {\
 			const char* was = ctx->state.cursor;\
 			/* ctx->state.cursor += 1;*/ \
-			return (token) {.type = t, .text=(sv_from_parts(was, 1))};\
+			return (token) {\
+				.type = t,\
+				.text=(sv_from_parts(was, 1)),\
+				.state = ctx->state\
+			};\
 		}\
 	} while(0)
 
@@ -157,24 +165,27 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	if (ctx->state.cursor >= ctx->content + ctx->content_length - 1)
 		return (token) {.type=T_EOF };
 
-	// Consume spaces
 	const char* start = ctx->state.cursor;
-	char* cursor = (char*) ctx->state.cursor;
-	while (isspace(*cursor) != 0) {
-		cursor++;
+	tokenizer_state s = ctx->state;
+	// Consume spaces
+	while (isspace(*s.cursor) != 0) {
+		s.cursor++;
 	}
 	// Also consume comments
-	while (strncmp(cursor, "//", 2) == 0) {
-		while (*cursor != '\n') {
-			cursor++;
+	while (strncmp(s.cursor, "//", 2) == 0) {
+		while (*s.cursor != '\n') {
+			s.line++;
+			s.col = 0;
+			s.cursor++;
 		}
-		cursor++;
+		s.cursor++;
 	}
 	// Consume spaces again
-	while (isspace(*cursor) != 0) {
-		cursor++;
+	while (isspace(*s.cursor) != 0) {
+		s.cursor++;
+		s.col++;
 	}
-	ctx->state.cursor = cursor;
+	ctx->state = s;
 
 	// Match code
 	RMATCH("\\\"([^\\\"]|\n)*\\\"", T_STRING_LIT);
@@ -185,7 +196,6 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	RMATCH("switch", T_SWITCH);
 	RMATCH("break", T_BREAK);
 	RMATCH("default", T_DEFAULT);
-	// RMATCH("->", T_ARROW);
 	RMATCH("0x[0-9a-fA-F]+", T_HEX_LIT);
 	RMATCH("[0-9]+\\.[0-9]+", T_DOUBLE_LIT);
 	RMATCH("[0-9]+", T_DECIMAL_LIT);
@@ -203,8 +213,6 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	CHMATCH('.', T_PERIOD);
 	CHMATCH('(', T_LP);
 	CHMATCH(')', T_RP);
-	// CHMATCH('[', T_LBKT);
-	// CHMATCH(']', T_RBKT);
 	CHMATCH('{', T_LBRC);
 	CHMATCH('}', T_RBRC);
 	CHMATCH('-', T_MINUS);

@@ -1,7 +1,6 @@
 #include "parser.h"
 #include "ast.h"
 #include "ast_helper.h"
-#include "interpreter.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -153,17 +152,17 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 			break;
 		case T_LOGIC_BEG...T_LOGIC_END:
 			nt = AST_NODE_TYPE_OPERATOR;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_LOGIC_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_LOGIC, .op=tok.text.data[0]}));
+			t=P_NEW_TERMINAL(TERMINAL_TYPE_LOGIC_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_LOGIC, .op=tok.text}));
 			status = 1;
 			break;
 		case T_STACK_BEG...T_STACK_END:
 			nt = AST_NODE_TYPE_OPERATOR;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_STACK_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_STACK, .op=tok.text.data[0]}));
+			t=P_NEW_TERMINAL(TERMINAL_TYPE_STACK_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_STACK, .op=tok.text}));
 			status = 1;
 			break;
 		case T_ARITH_BEG...T_ARITH_END:
 			nt = AST_NODE_TYPE_OPERATOR;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_ARITH_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_ARITH, .op=tok.text.data[0]}));
+			t=P_NEW_TERMINAL(TERMINAL_TYPE_ARITH_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_ARITH, .op=tok.text}));
 			status = 1;
 			break;
 		case T_RESERVE_BEG...T_RESERVE_END:
@@ -173,7 +172,7 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 			break;
 		default: break;
 	}
-	*out_n = (AST_Node) {.nodeType=nt, .terminal=t};
+	*out_n = (AST_Node) {.nodeType=nt, .terminal=t, .state=tok.state};
 	return status;
 }
 
@@ -188,6 +187,7 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		out_n->expression = calloc(1, sizeof(Expression));
 		out_n->expression->type = EXPRESSION_TYPE_TERM;
 		out_n->expression->ETerm.term = n.term;
+		out_n->expression->state = n.state;
 		return 1;
 	}
 
@@ -204,6 +204,7 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		out_n->expression->EEO.left = expr1.expression;
 		out_n->expression->EEO.right = expr2.expression;
 		out_n->expression->EEO.operation = operator.terminal.operatorr;
+		out_n->expression->state = expr1.state;
 		return 3;
 	}
 
@@ -217,6 +218,7 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		out_n->expression = malloc(sizeof(Expression));
 		out_n->expression->type = EXPRESSION_TYPE_PROC_CALL;
 		out_n->expression->EProcCall.proc_call.name = id.terminal.id;
+		out_n->expression->state = expr.state;
 		return 1;
 	}
 
@@ -231,36 +233,43 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 				out_n->nodeType = AST_NODE_TYPE_TERM;
 				out_n->term.type = TERM_TYPE_HEX_LIT;
 				out_n->term._integer = n.term._integer;
+				out_n->term.state = n.state;
 				return 1;
 			case TERMINAL_TYPE_DOUBLE_LIT:
 				out_n->nodeType = AST_NODE_TYPE_TERM;
 				out_n->term.type = TERM_TYPE_DOUBLE_LIT;
 				out_n->term._double = n.term._double;
+				out_n->term.state = n.state;
 				return 1;
 			case TERMINAL_TYPE_DEC_LIT:
 				out_n->nodeType = AST_NODE_TYPE_TERM;
 				out_n->term.type = TERM_TYPE_DEC_LIT;
 				out_n->term._integer = n.term._integer;
+				out_n->term.state = n.state;
 				return 1;
 			case TERMINAL_TYPE_STRING_LIT:
 				out_n->nodeType = AST_NODE_TYPE_TERM;
 				out_n->term.type = TERM_TYPE_STRING_LIT;
 				out_n->term._string = n.term._string;
+				out_n->term.state = n.state;
 				return 1;
 			case TERMINAL_TYPE_CHAR_LIT:
 				out_n->nodeType = AST_NODE_TYPE_TERM;
 				out_n->term.type = TERM_TYPE_CHR_LIT;
 				out_n->term._chr = n.term._chr;
+				out_n->term.state = n.state;
 				return 1;
 			case TERMINAL_TYPE_LOGIC_OP:
 				out_n->nodeType = AST_NODE_TYPE_OPERATOR;
 				out_n->op.type = OPERATOR_TYPE_LOGIC;
 				out_n->op = n.terminal.operatorr;
+				out_n->op.state = n.state;
 				return 1;
 			case TERMINAL_TYPE_ARITH_OP:
 				out_n->nodeType = AST_NODE_TYPE_OPERATOR;
 				out_n->op.type = OPERATOR_TYPE_ARITH;
 				out_n->op = n.terminal.operatorr;
+				out_n->op.state = n.state;
 				return 1;
 			case TERMINAL_TYPE_STACK_OP:
 				assert(0 && "Stack op not implemented properly");
@@ -268,6 +277,7 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 				out_n->expression = calloc(1, sizeof(Expression));
 				out_n->expression->type = EXPRESSION_TYPE_STACK_OP;
 				out_n->expression->EEO.operation = n.terminal.operatorr;
+				out_n->expression->state = n.state;
 				return 1;
 		}
 	}

@@ -29,8 +29,13 @@ int main(int argc, char** argv) {
 
 		AST_Node n;
 		int p;
+		// 1. Convert the token in the 
 		if ((p = try_convert_token_to_terminal(tok, &n)) != 0) {
 			pctx_push(&pctx, n);
+		}
+		else {
+			fprintf(stderr, "Couldn't convert the token, [" SV_Fmt "] to a terminal. Continuing past it anyways.\n", SV_Arg(tok.text));
+			continue;
 		}
 
 		while ((p = try_reduce(&pctx, &n)) != 0) {

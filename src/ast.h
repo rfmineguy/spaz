@@ -107,20 +107,24 @@ typedef enum AST_NodeType {
 typedef struct AST_Node AST_Node;
 
 struct Program {
+	tokenizer_state state;
 	cvector_vector_type(AST_Node) p;
 };
 
 struct Reserved {
+	tokenizer_state state;
 	token_type type;
 	String_View str;
 };
 
 struct Operator {
+	tokenizer_state state;
 	OperatorType type;
-	char op;
+	String_View op;
 };
 
 struct Terminal {
+	tokenizer_state state;
 	TerminalType type;
 	union {
 		Reserved reserved;
@@ -134,6 +138,7 @@ struct Terminal {
 };
 
 struct Term {
+	tokenizer_state state;
 	TermType type;
 	union {
 		int         _integer;
@@ -145,6 +150,7 @@ struct Term {
 };
 
 struct ProcedureCall {
+	tokenizer_state state;
 	String_View name;
 	int argumentCount;
 };
@@ -158,6 +164,7 @@ struct ProcedureCall {
  *     - only term, term2, and operation are guarunteed to be valid
  */
 struct Expression {
+	tokenizer_state state;
 	ExpressionType type;
 	union {
 		struct {
@@ -174,36 +181,43 @@ struct Expression {
 };
 
 struct Block {
+	tokenizer_state state;
 	cvector_vector_type(Statement) stmts;
 };
 
 struct SwitchBlock {
+	tokenizer_state state;
 	cvector_vector_type(SwitchCase) cases;
 };
 
 struct ProcedureDef {
+	tokenizer_state state;
 	String_View name;
 	cvector_vector_type(String_View) params;
 	Block block;
 };
 
 struct Iff {
+	tokenizer_state state;
 	Expression expression;
 	Block block;
 };
 
 struct Switch {
+	tokenizer_state state;
 	Expression expr;
 	SwitchBlock block;
 };
 
 struct SwitchCase {
+	tokenizer_state state;
 	Term value;
 	Block b;
 };
 
 struct Statement {
 	StatementType type;
+	tokenizer_state state;
 	union {
 		Iff iff;
 		Switch switchh;
@@ -213,6 +227,7 @@ struct Statement {
 
 struct AST_Node {
 	AST_NodeType nodeType;
+	tokenizer_state state;
 	union {
 		Program program;
 		Reserved reserved;
