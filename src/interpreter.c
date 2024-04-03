@@ -94,9 +94,13 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 				case CHAR:
 					printf(SV_Fmt "\n", SV_Arg(l.charLiteral));
 					break;
-				case STRING:
-					printf(SV_Fmt "\n", SV_Arg(l.stringLiteral));
+				case STRING: {
+					String_View s;
+					s.data = l.stringLiteral.data + 1;
+					s.count = l.stringLiteral.count - 2;
+					printf(SV_Fmt "\n", SV_Arg(s));
 					break;
+				}
 				case DOUBLE:
 					printf("%0.4f\n", l.doubleLiteral);
 					break;
