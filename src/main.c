@@ -5,7 +5,6 @@
 #include "tokenizer.h"
 #include "parser.h"
 #include <stdio.h>
-#include <assert.h>
 #include "../gengetopt/cmdline.h"
 
 int main(int argc, char** argv) {
@@ -15,10 +14,6 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	if (argc == 1) {
-		cmdline_parser_print_help();
-		return 2;
-	}
 	if (!ai.file_given) {
 		fprintf(stderr, "No file specified\n");
 		return 2;
@@ -55,5 +50,7 @@ int main(int argc, char** argv) {
 	ictx_run(&ictx, program.program);
 
 	tctx_free(&ctx);
-	cmdline_parser_free(&ai);
+
+	// I think this causes a crash?
+	// cmdline_parser_free(&ai);
 }

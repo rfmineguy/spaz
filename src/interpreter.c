@@ -5,7 +5,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
-#include <assert.h>
+#include "sl_assert.h"
 
 /***
  *  For interpreting the code, I think building a parse tree is worth while
@@ -87,47 +87,41 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 			}
 			return;
 		}
-		assert(0 && "Proc call not implemented");
+		sl_assert(0, "Proc call not implemented");
 	}
 	if (exp->type == EXPRESSION_TYPE_EEO) {
 		ictx_process_expression(ictx, exp->EEO.left);
 		ictx_process_expression(ictx, exp->EEO.right);
-		// perform operation on stack
-		switch (exp->EEO.operation.type) {
-			case OPERATOR_TYPE_ARITH:
+		// the stack SHOULD have the two values to add
+		stack_node r = ictx->stack[ictx->stack_top--];
+		stack_node l = ictx->stack[ictx->stack_top--];
+		switch (exp->EEO.operation.op) {
+			case '+':
 				{
-					// the stack SHOULD have the two values to add
-					stack_node r = ictx->stack[ictx->stack_top--];
-					stack_node l = ictx->stack[ictx->stack_top--];
-					switch (exp->EEO.operation.op) {
-						case '+':
-							{
-								stack_node n = ictx_perform_addition(l, r);
-								ictx->stack[++ictx->stack_top] = n;
-								break;
-							}
-						case '-':
-							{
-								stack_node n = ictx_perform_subtraction(l, r);
-								ictx->stack[++ictx->stack_top] = n;
-								break;
-							}
-						case '*':
-							{
-								stack_node n = ictx_perform_mult(l, r);
-								ictx->stack[++ictx->stack_top] = n;
-								break;
-							}
-						case '/':
-							{
-								stack_node n = ictx_perform_division(l, r);
-								ictx->stack[++ictx->stack_top] = n;
-								break;
-							}
-					}
-				} break;
-			default: assert(0 && "StackOP, and LogicOp not implemented");
-				// ictx->stack[ictx->stack_top].type = 
+					stack_node n = ictx_perform_addition(l, r);
+					ictx->stack[++ictx->stack_top] = n;
+					break;
+				}
+			case '-':
+				{
+					stack_node n = ictx_perform_subtraction(l, r);
+					ictx->stack[++ictx->stack_top] = n;
+					break;
+				}
+			case '*':
+				{
+					stack_node n = ictx_perform_mult(l, r);
+					ictx->stack[++ictx->stack_top] = n;
+					break;
+				}
+			case '/':
+				{
+					stack_node n = ictx_perform_division(l, r);
+					ictx->stack[++ictx->stack_top] = n;
+					break;
+				}
+			default:
+				sl_assert(0, "Operator '%c' not implmented", exp->EEO.operation.op);
 		}
 	}
 }
