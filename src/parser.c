@@ -6,28 +6,6 @@
 #include <stdio.h>
 #include <math.h>
 
-// parse_stack_node create_stack_node_terminal(token t) {
-// 	parse_stack_node psn = {0};
-// 	psn.type = PSNT_TERMINAL;
-// 	psn.terminal = t;
-// 	return psn;
-// }
-
-// parse_stack_node create_stack_node_nonterminal() {}
-
-// const char* pctx_type_str(pstack_node_type nodetype) {
-// 	switch (nodetype) {
-// 		case PSNT_TERMINAL:       return "Terminal";
-// 		case PSNT_TERM: 					return "Term";
-// 		case PSNT_EXPRESSION:     return "Expression";
-// 		case PSNT_PROCEDURE_CALL: return "ProcedureCall";
-// 		case PSNT_PROCEDURE_DEF:  return "ProcedureDef";
-// 		case PSNT_IFF: 						return "Iff";
-// 		case PSNT_SWITCH: 				return "Switch";
-// 		case PSNT_CASE: 					return "Case";
-// 	}
-// }
-
 parse_ctx pctx_new(int initial_capacity) {
 	parse_ctx ctx = {0};
 	ctx.pstack.top = -1;
@@ -166,7 +144,7 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 			status = 1;
 			break;
 		case T_RESERVE_BEG...T_RESERVE_END:
-			nt = AST_NODE_TYPE_TERMINAL;
+			nt = AST_NODE_TYPE_RESERVED;
 			t=P_NEW_TERMINAL(TERMINAL_TYPE_RESERVED, .reserved=((Reserved) {.type=tok.type, .str=tok.text}));
 			status = 1;
 			break;
@@ -219,6 +197,26 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		out_n->expression->type = EXPRESSION_TYPE_PROC_CALL;
 		out_n->expression->EProcCall.proc_call.name = id.terminal.id;
 		out_n->expression->state = expr.state;
+		return 1;
+	}
+
+	// reduce if
+	//  NOTE: Incomplete
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED) {
+		printf("reserved: %d\n", pctx_peek_offset(pctx, 0).reserved.type);
+	}
+	// printf("%d\n", pctx_peek_offset(pctx, 0).reserved.type == T_IF);
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
+			pctx_peek_offset(pctx, 0).reserved.type == T_IF) {// &&
+			//pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_EXPRESSION) {
+		printf("Reducing if\n");
+		// AST_Node iff = pctx_peek_offset(pctx, 1);
+		// AST_Node expr = pctx_peek_offset(pctx, 0);
+		// out_n->nodeType = AST_NODE_TYPE_IFF;
+		// out_n->iff = malloc(sizeof(Iff));
+		// out_n->iff->state = expr.state;
+		// out_n->iff->expression = expr.expression;
+		// out_n->iff->state = expr.state;
 		return 1;
 	}
 
