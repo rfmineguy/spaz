@@ -103,7 +103,7 @@ typedef struct Block Block;
 typedef struct SwitchBlock SwitchBlock;
 
 typedef enum AST_NodeType {
-	AST_NODE_TYPE_UNDEFINED,
+	AST_NODE_TYPE_UNDEFINED = 0,
 	AST_NODE_TYPE_PROGRAM,
 	AST_NODE_TYPE_RESERVED,
 	AST_NODE_TYPE_TERMINAL,
