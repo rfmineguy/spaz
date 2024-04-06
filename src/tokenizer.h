@@ -9,8 +9,10 @@ typedef enum token_type {
 	// Unreserved tokens
 	T_ID, 
 	T_DOUBLE_LIT, T_DECIMAL_LIT, T_HEX_LIT, T_STRING_LIT, T_CHAR_LIT, 
+	T_SINGLE_LINE_COMMENT, T_MULTI_LINE_COMMENT,
+
 	// Reserved tokens
-	T_RESERVE_BEG,
+	T_RESERVE_BEG = 100,
 	T_FN, T_IF, T_ELSE,
 	T_SWITCH, T_BREAK, T_DEFAULT,
 	T_SQUOTE, T_DQUOTE,
@@ -18,26 +20,26 @@ typedef enum token_type {
 	T_LBRC, T_RBRC,
 	T_RESERVE_END,
 
-	T_BOR, T_BAND, // bitwise
+	T_BOR = 200, T_BAND, // bitwise
 
 	// LogicOp 
-	T_LOGIC_BEG, 
+	T_LOGIC_BEG = 300, 
 	T_EQ, T_GT, T_LT, T_GTEQ, T_LTEQ,
 	T_LOR, T_LAND, // logical
 	T_LOGIC_END,
 
 	// StackOp
-	T_STACK_BEG,
+	T_STACK_BEG = 400,
 	T_COLON, T_COMMA, T_PERIOD,
 	T_STACK_END,
 
 	// ArithOp
-	T_ARITH_BEG,
+	T_ARITH_BEG = 500,
 	T_MINUS, T_PLUS,T_MUL, T_DIV, T_MOD,
 	T_ARITH_END,
 
 	// Internal tokens
-	T_EOF, T_SPACE, T_UNKNOWN
+	T_EOF = 600, T_SPACE, T_UNKNOWN
 } token_type;
 
 typedef struct tokenizer_state {

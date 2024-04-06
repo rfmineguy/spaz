@@ -1,0 +1,6 @@
+memory 1k {
+	x,
+	y
+}
+
+4 6 - 7 * "x // store (4 6 - 7 *) -> memory x

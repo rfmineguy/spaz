@@ -1,0 +1,10 @@
+This is a big commit:
+Removed TERMINAL_OP and RESERVED. Replaced with dedicated ASTNode;
+Added new ASTNode StatementExpression to support blocks;
+Added ast_print_node_lite (without all the baggage of ast_print_node);
+Added verbose flag;
+Modified reduction function to support StatementExpression, and the rest of the rules that used expressions are translated to this new ASTNode;
+BIG:: Added a reduction rule for block statements (Note: this is still kind of ugly but it works)
+Finally I padded the values of the token types
+
+END

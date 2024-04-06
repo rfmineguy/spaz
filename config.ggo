@@ -7,3 +7,5 @@ versiontext "Developed by Riley Fischer"
 
 option "file" f "" string optional
 option "ptree" p "" optional
+option "verbose" v "" optional
+option "interpret" i "" optional

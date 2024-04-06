@@ -26,6 +26,15 @@ int main(int argc, char** argv) {
 	token tok;
 	while ((tok = tctx_get_next(&ctx)).type != T_EOF) {
 		tctx_advance(&ctx);
+		if (tok.type == T_EOF) break;
+		// if (tok.type == T_SINGLE_LINE_COMMENT) {
+		// 	printf("SingleLineComment: " SV_Fmt "\n", SV_Arg(tok.text));
+		// 	continue;
+		// }
+		// if(tok.type ==  T_MULTI_LINE_COMMENT) {
+		// 	printf("MultiLineComment: " SV_Fmt "\n", SV_Arg(tok.text));
+		// 	continue;
+		// }
 
 		AST_Node n;
 		int p;
@@ -33,8 +42,18 @@ int main(int argc, char** argv) {
 		if ((p = try_convert_token_to_terminal(tok, &n)) != 0) {
 			pctx_push(&pctx, n);
 		}
+		else if ((p = try_convert_token_to_operator(tok, &n)) != 0) {
+			pctx_push(&pctx, n);
+		}
+		else if ((p = try_convert_token_to_reserved(tok, &n)) != 0) {
+			pctx_push(&pctx, n);
+		}
 		else {
-			fprintf(stderr, "Couldn't convert the token, [" SV_Fmt "] to a terminal. Continuing past it anyways.\n", SV_Arg(tok.text));
+			if (tok.type == T_EOF) {
+				break;
+			}
+			fprintf(stderr, "Couldn't convert the token, [str=" SV_Fmt ", v=%d] to a terminal. Continuing past it anyways.\n", SV_Arg(tok.text), tok.type);
+			fprintf(stderr, "%*s\n", 4, ctx.state.cursor);
 			continue;
 		}
 
@@ -44,22 +63,28 @@ int main(int argc, char** argv) {
 			pctx_pop_n(&pctx, p);
 			pctx_push(&pctx, n);
 		}
-		if (reduceCount == 0) {
-			fprintf(stderr, "%s\n", ctx.state.cursor);
-			fprintf(stderr, "No reduction rule available\n");
-			return 3;
-		}
+	}
+	if (ai.verbose_given) {
+		printf("Printing parse stack\n");
+		printf("==========================================\n");
+		pctx_print_stack(&pctx);
+		printf("==========================================\n");
 	}
 
 	for (int i = 0; i <= pctx.pstack.top; i++) {
 		cvector_push_back(program.program.p, pctx.pstack.data[i]);
 	}
 	if (ai.ptree_given) {
-		ast_print_program(program.program, 0);
+		printf("Printing program\n");
+		printf("==========================================\n");
+		ast_print_node(program, 0);
+		printf("==========================================\n");
 	}
 
-	interpreter_ctx ictx = ictx_new();
-	ictx_run(&ictx, program.program);
+	if (ai.interpret_given) {
+		interpreter_ctx ictx = ictx_new();
+		ictx_run(&ictx, program.program);
+	}
 
 	tctx_free(&ctx);
 

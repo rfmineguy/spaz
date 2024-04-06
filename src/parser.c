@@ -1,7 +1,9 @@
 #include "parser.h"
 #include "ast.h"
 #include "ast_helper.h"
-#include <assert.h>
+#include "cvector.h"
+#include "sl_assert.h"
+#include "tokenizer.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -65,7 +67,7 @@ AST_Node pctx_peek(parse_ctx* pctx) {
 
 AST_Node pctx_peek_offset(parse_ctx* pctx, int n) {
 	if (pctx->pstack.length <= n) {
-		return (AST_Node){}; // shouldn't happen. lol, famous last words
+		return (AST_Node){.nodeType=AST_NODE_TYPE_UNDEFINED}; // shouldn't happen. lol, famous last words
 	}
 	return pctx->pstack.data[pctx->pstack.top - n];
 }
@@ -87,8 +89,15 @@ void pctx_pop_n(parse_ctx* pctx, int n) {
 
 void pctx_print_stack(parse_ctx* pctx) {
 	for (int i = 0; i < pctx->pstack.length; i++) {
-		printf("%d\n", i);
+		// printf("%d\n", i);
 		ast_print_node(pctx->pstack.data[i], 0);
+	}
+}
+
+void pctx_print_stack_lite(parse_ctx* pctx) {
+	for (int i = 0; i < pctx->pstack.length; i++) {
+		AST_Node n =pctx->pstack.data[i]; 
+		ast_print_node_lite(n);
 	}
 }
 
@@ -128,29 +137,51 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 			t=P_NEW_TERMINAL(TERMINAL_TYPE_CHAR_LIT, .chr_lit=tok.text);
 			status = 1;
 			break;
+		default: break;
+	}
+	*out_n = (AST_Node) {.nodeType=nt, .terminal=t, .state=tok.state};
+	return status;
+}
+
+int try_convert_token_to_operator(token tok, AST_Node* out_n) {
+	AST_NodeType nt = AST_NODE_TYPE_UNDEFINED;
+	Operator op;
+	int status = 0; // 0 indicates no reduction
+	switch (tok.type) {
 		case T_LOGIC_BEG...T_LOGIC_END:
 			nt = AST_NODE_TYPE_OPERATOR;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_LOGIC_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_LOGIC, .op=tok.text}));
+			op=P_NEW_OPERATOR(OPERATOR_TYPE_LOGIC, .op=tok.text);
 			status = 1;
 			break;
 		case T_STACK_BEG...T_STACK_END:
 			nt = AST_NODE_TYPE_OPERATOR;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_STACK_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_STACK, .op=tok.text}));
+			op=P_NEW_OPERATOR(OPERATOR_TYPE_STACK, .op=tok.text);
 			status = 1;
 			break;
 		case T_ARITH_BEG...T_ARITH_END:
 			nt = AST_NODE_TYPE_OPERATOR;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_ARITH_OP, .operatorr=((Operator){.type=OPERATOR_TYPE_ARITH, .op=tok.text}));
-			status = 1;
-			break;
-		case T_RESERVE_BEG...T_RESERVE_END:
-			nt = AST_NODE_TYPE_RESERVED;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_RESERVED, .reserved=((Reserved) {.type=tok.type, .str=tok.text}));
+			op=P_NEW_OPERATOR(OPERATOR_TYPE_ARITH, .op=tok.text);
 			status = 1;
 			break;
 		default: break;
 	}
-	*out_n = (AST_Node) {.nodeType=nt, .terminal=t, .state=tok.state};
+	*out_n = (AST_Node) {.nodeType=nt, .op = op, .state=tok.state};
+	return status;
+}
+
+int try_convert_token_to_reserved(token tok, AST_Node* out_n) {
+	AST_NodeType nt = AST_NODE_TYPE_UNDEFINED;
+	Reserved res;
+	int status = 0; // 0 indicates no reduction
+	switch (tok.type) {
+		case T_RESERVE_BEG...T_RESERVE_END:
+			nt = AST_NODE_TYPE_RESERVED;
+			res=P_NEW_RESERVED(tok);
+			status = 1;
+			break;
+		default: break;
+	}
+	*out_n = (AST_Node) {.nodeType = nt, .reserved = res};
 	return status;
 }
 
@@ -161,53 +192,120 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 	// term -> expression
 	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_TERM) {
 		AST_Node n = pctx_peek(pctx);
-		out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
-		out_n->expression = calloc(1, sizeof(Expression));
-		out_n->expression->type = EXPRESSION_TYPE_TERM;
-		out_n->expression->ETerm.term = n.term;
-		out_n->expression->state = n.state;
+		out_n->nodeType = AST_NODE_TYPE_STATEMENT_EXPRESSION;
+		out_n->stmtExpr.expr = calloc(1, sizeof(Expression));
+		out_n->stmtExpr.expr->type = EXPRESSION_TYPE_TERM;
+		out_n->stmtExpr.expr->ETerm.term = n.term;
+		out_n->stmtExpr.expr->state = n.state;
 		return 1;
 	}
 
 	// expression expression op -> expression
-	if (pctx_peek_offset(pctx, 2).nodeType == AST_NODE_TYPE_EXPRESSION &&
-			pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_EXPRESSION &&
-			pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_OPERATOR) {
+	if (pctx_peek_offset(pctx, 2).nodeType == AST_NODE_TYPE_STATEMENT_EXPRESSION &&
+			pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_STATEMENT_EXPRESSION &&
+			pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_OPERATOR)
+	{
 		AST_Node expr1 = pctx_peek_offset(pctx, 2);
 		AST_Node expr2 = pctx_peek_offset(pctx, 1);
 		AST_Node operator = pctx_peek_offset(pctx, 0);
-		out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
-		out_n->expression = malloc(sizeof(Expression));
-		out_n->expression->type = EXPRESSION_TYPE_EEO;
-		out_n->expression->EEO.left = expr1.expression;
-		out_n->expression->EEO.right = expr2.expression;
-		out_n->expression->EEO.operation = operator.terminal.operatorr;
-		out_n->expression->state = expr1.state;
+		out_n->nodeType = AST_NODE_TYPE_STATEMENT_EXPRESSION;
+		out_n->stmtExpr.type = STATEMENT_EXPR_TYPE_EXPRESSION;
+		out_n->stmtExpr.expr = malloc(sizeof(Expression));
+		out_n->stmtExpr.expr->type = EXPRESSION_TYPE_EEO;
+		out_n->stmtExpr.expr->EEO.left = expr1.stmtExpr.expr;
+		out_n->stmtExpr.expr->EEO.right = expr2.stmtExpr.expr;
+		out_n->stmtExpr.expr->EEO.operation = operator.op;
+		out_n->stmtExpr.expr->state = expr1.state;
 		return 3;
 	}
 
 	// expression id -> procedure_call 
-	if (pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_EXPRESSION &&
+	if (pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_STATEMENT_EXPRESSION &&
+			pctx_peek_offset(pctx, 1).stmtExpr.type == STATEMENT_EXPR_TYPE_EXPRESSION &&
 			pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_TERMINAL &&
 			pctx_peek_offset(pctx, 0).terminal.type == TERMINAL_TYPE_IDENTIFIER) {
 		AST_Node expr = pctx_peek_offset(pctx, 1);
 		AST_Node id = pctx_peek_offset(pctx, 0);
-		out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
-		out_n->expression = malloc(sizeof(Expression));
-		out_n->expression->type = EXPRESSION_TYPE_PROC_CALL;
-		out_n->expression->EProcCall.proc_call.name = id.terminal.id;
-		out_n->expression->state = expr.state;
+		out_n->nodeType = AST_NODE_TYPE_STATEMENT_EXPRESSION;
+		out_n->stmtExpr.type = STATEMENT_EXPR_TYPE_EXPRESSION;
+		out_n->stmtExpr.expr = malloc(sizeof(Expression));
+		out_n->stmtExpr.expr->type = EXPRESSION_TYPE_PROC_CALL;
+		out_n->stmtExpr.expr->EProcCall.proc_call.name = id.terminal.id;
+		out_n->stmtExpr.expr->state = expr.state;
 		return 1;
 	}
 
-	// reduce if
-	//  NOTE: Incomplete
-	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED) {
-		printf("reserved: %d\n", pctx_peek_offset(pctx, 0).reserved.type);
-	}
-	// printf("%d\n", pctx_peek_offset(pctx, 0).reserved.type == T_IF);
+	// reduce block (simple block for now)
+	// <block>       := '{' <expressions> '}'
+	//  expressions is just a sequence of expressions
 	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
-			pctx_peek_offset(pctx, 0).reserved.type == T_IF) {// &&
+			pctx_peek_offset(pctx, 0).reserved.token.type == T_RBRC) {
+		bool is_valid_block = true;
+		const char* msg = "";
+		AST_Node ref;
+		int offset;
+		for (offset = 1; ; offset++) {
+			// Have we searched past the extent of the stack? 
+			// If so we wont find the opening '{' and thus it is missing
+			//    Fail case
+			if (pctx->pstack.top - offset < 0) {
+				is_valid_block = false;
+				msg = "No opening '{' found";
+				break;
+			}
+			// Have we encountered the original opening '{' token? (Remember we are searching backwards) 
+			//    Success case
+			//    nodes from 1..offset-1 should go into block ast
+			if (pctx_peek_offset(pctx, offset).nodeType == AST_NODE_TYPE_RESERVED &&
+					pctx_peek_offset(pctx, offset).reserved.token.type == T_LBRC) {
+				break;
+			}
+			// Are the contents of the block valid? Type StatementExpression?
+			//    Fail case
+			if (pctx_peek_offset(pctx, offset).nodeType != AST_NODE_TYPE_STATEMENT_EXPRESSION) {
+				is_valid_block = false;
+				msg = "Only expressions and statements are allowed within a block.";
+				ref = pctx_peek_offset(pctx, offset);
+				break;
+			}
+		}
+		// If the loop above failed, report the failure and exit the program
+		if (!is_valid_block) {
+			sl_assert(0, "Error while parsing block\n\t%s\n\twith nodeType: %d\n", msg, ref.nodeType == AST_NODE_TYPE_UNDEFINED ? -1 : ref.nodeType);
+		}
+
+		// If the loop above didn't fail, we have a valid code block
+		out_n->nodeType = AST_NODE_TYPE_BLOCK;
+		if (offset == 1) {
+			return 2;
+		}
+		// subtract 1 because we dont want to count the expression for the if condition
+		// printf("Number of expressions in block: %d\n", offset - 1); 
+		printf("offset: %d\n", offset);
+		// Put the expressions and statements into the block node
+		for (int i = 0; i < offset - 1; i++) {
+			AST_Node n = pctx_peek_offset(pctx, offset - 1 - i);
+			cvector_push_back(out_n->block.items, n.stmtExpr);
+		}
+
+		pctx_print_stack_lite(pctx);
+		// Return with the number of nodes to pop (the inner expressions + the '{' and '}')
+		return offset + 2;
+	}
+
+	// 'if' expression block -> if
+	//  NOTE: Incomplete
+	if (pctx_peek_offset(pctx, 2).nodeType == AST_NODE_TYPE_RESERVED &&
+			pctx_peek_offset(pctx, 2).reserved.token.type == T_IF &&
+			pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_STATEMENT_EXPRESSION &&
+			pctx_peek_offset(pctx, 1).stmtExpr.type == STATEMENT_EXPR_TYPE_EXPRESSION &&
+			pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_BLOCK) {
+		sl_assert(0, "Reducing if statements unsupported right now");
+	}
+
+	/*
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
+			pctx_peek_offset(pctx, 0).reserved.token_type == T_IF) {// &&
 			//pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_EXPRESSION) {
 		printf("Reducing if\n");
 		// AST_Node iff = pctx_peek_offset(pctx, 1);
@@ -219,12 +317,12 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		// out_n->iff->state = expr.state;
 		return 1;
 	}
+	*/
 
 	// reduce terminals
 	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_TERMINAL) {
 		AST_Node n = pctx_peek(pctx);
 		switch (n.terminal.type) {
-			case TERMINAL_TYPE_RESERVED:
 			case TERMINAL_TYPE_IDENTIFIER:
 				return 0;
 			case TERMINAL_TYPE_HEX_LIT:
@@ -257,26 +355,26 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 				out_n->term._chr = n.term._chr;
 				out_n->term.state = n.state;
 				return 1;
-			case TERMINAL_TYPE_LOGIC_OP:
-				out_n->nodeType = AST_NODE_TYPE_OPERATOR;
-				out_n->op.type = OPERATOR_TYPE_LOGIC;
-				out_n->op = n.terminal.operatorr;
-				out_n->op.state = n.state;
-				return 1;
-			case TERMINAL_TYPE_ARITH_OP:
-				out_n->nodeType = AST_NODE_TYPE_OPERATOR;
-				out_n->op.type = OPERATOR_TYPE_ARITH;
-				out_n->op = n.terminal.operatorr;
-				out_n->op.state = n.state;
-				return 1;
-			case TERMINAL_TYPE_STACK_OP:
-				assert(0 && "Stack op not implemented properly");
-				out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
-				out_n->expression = calloc(1, sizeof(Expression));
-				out_n->expression->type = EXPRESSION_TYPE_STACK_OP;
-				out_n->expression->EEO.operation = n.terminal.operatorr;
-				out_n->expression->state = n.state;
-				return 1;
+			// case TERMINAL:
+			// 	out_n->nodeType = AST_NODE_TYPE_OPERATOR;
+			// 	out_n->op.type = OPERATOR_TYPE_LOGIC;
+			// 	out_n->op = n.terminal.operatorr;
+			// 	out_n->op.state = n.state;
+			// 	return 1;
+			// case TERMINAL_TYPE_ARITH_OP:
+			// 	out_n->nodeType = AST_NODE_TYPE_OPERATOR;
+			// 	out_n->op.type = OPERATOR_TYPE_ARITH;
+			// 	out_n->op = n.terminal.operatorr;
+			// 	out_n->op.state = n.state;
+			// 	return 1;
+			// case TERMINAL_TYPE_STACK_OP:
+			// 	assert(0 && "Stack op not implemented properly");
+			// 	out_n->nodeType = AST_NODE_TYPE_EXPRESSION;
+			// 	out_n->expression = calloc(1, sizeof(Expression));
+			// 	out_n->expression->type = EXPRESSION_TYPE_STACK_OP;
+			// 	out_n->expression->EEO.operation = n.terminal.operatorr;
+			// 	out_n->expression->state = n.state;
+			// 	return 1;
 		}
 	}
 

@@ -16,7 +16,11 @@ endif
 .PHONY: build-all build-interpreter build-tests
 .PHONY: run-tests
 .PHONY: gengetopt
+.PHONY: info
 
+#  ===============
+#   UTILITY targets
+#  ===============
 clean:
 	-rm -r out
 	-rm gengetopt/cmdline.*
@@ -27,9 +31,25 @@ build-interpreter: clean always out/main
 build-tests: clean always out/test_main
 run-tests: build-tests
 	./out/test_main
+
+#  ===============
+#   DEBUG targets
+#  ===============
 debug:
 	docker run --rm -it -v $(shell pwd):$(shell pwd) -w $(shell pwd) alpine sh -c "gcc $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/$(BIN)_x86"
 	docker run --rm -it -e DISPLAY=192.168.1.142:0 -v $(shell pwd):$(shell pwd) -w $(shell pwd) alpine gf2 ./out/$(BIN)_x86
+
+#  ===============
+#   INSTALL targets
+#  ===============
+install:
+	@echo "Installing to $(INSTALL_DIR)"
+	sudo install -d $(INSTALL_DIR)
+	sudo install -m 557 out/$(BIN) $(INSTALL_DIR)
+
+#  ===============
+#   BUILD targets
+#  ===============
 gengetopt:
 	mkdir -p gengetopt
 	gengetopt --input=config.ggo --include-getopt
@@ -39,7 +59,3 @@ out/main:
 out/test_main:
 	gcc $(TEST_SOURCES) $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/test_main -lm
 
-install:
-	@echo "Installing to $(INSTALL_DIR)"
-	sudo install -d $(INSTALL_DIR)
-	sudo install -m 557 out/$(BIN) $(INSTALL_DIR)

@@ -11,6 +11,10 @@
 	(Terminal) {.type=type_, expr}
 #define P_NEW_TERM(type_, expr) \
 	(Term) {.type=type_, expr}
+#define P_NEW_OPERATOR(type_, expr) \
+	(Operator) {.type=type_, expr}
+#define P_NEW_RESERVED(tok) \
+	(Reserved) {.token = tok}
 
 typedef struct parse_stack_node {
 	AST_Node node;
@@ -39,6 +43,7 @@ AST_Node          pctx_peek_offset(parse_ctx*, int);
 void 						 	pctx_pop(parse_ctx*);
 void 							pctx_pop_n(parse_ctx*, int);
 void 							pctx_print_stack(parse_ctx*);
+void 							pctx_print_stack_lite(parse_ctx*);
 
 int interpret_decimal_sv_to_int(String_View);
 int interpret_hex_sv_to_int(String_View);
@@ -52,5 +57,7 @@ double interpret_double_sv_to_double(String_View);
 //   - number of matched nodes
 //   - 0 indicates that nothing was reduced
 int               try_convert_token_to_terminal(token, AST_Node*);
+int               try_convert_token_to_operator(token, AST_Node*);
+int               try_convert_token_to_reserved(token, AST_Node*);
 int 							try_reduce(parse_ctx*, AST_Node*);
 #endif

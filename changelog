@@ -1,0 +1,9 @@
+Note: This is not a comprehensive changelog. Im kinda lazy with it.
+
+
+Apr 05 2024
+Commit #1
+ - focus was on getting blocks parsing
+ - this is tricky because i want both statements AND expressions to be
+ allowed (meaning if statements and the regular function call/arithmatic
+ expressions)

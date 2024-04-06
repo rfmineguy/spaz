@@ -33,6 +33,8 @@
  * 		                | null
  * 		block          := '{' <statements> '}'
  *    if   					 := if <expression> <block>
+ *
+ *    -------- FUTURE ----------
  *    switch				 := switch <stack_op> <switch-block>
  * 		switch-case    := <term> ':' <expression>
  * 		switch-block   := <switch-case> <block>
@@ -49,10 +51,8 @@ typedef enum TerminalType {
 	TERMINAL_TYPE_DEC_LIT,    // <dec_lit>
 	TERMINAL_TYPE_STRING_LIT, // <str_lit>
 	TERMINAL_TYPE_CHAR_LIT,   // <chr_lit>
-	TERMINAL_TYPE_LOGIC_OP,   // <logic_op>
-	TERMINAL_TYPE_STACK_OP,   // <stack_op>
-	TERMINAL_TYPE_ARITH_OP,   // <arith_op>
-	TERMINAL_TYPE_RESERVED,   // other...
+	// TERMINAL_TYPE_OPERATOR,   // <logic_op> | <stack_op> | <arith_op>
+	// TERMINAL_TYPE_RESERVED,   // other...
 } TerminalType;
 typedef enum TermType {
 	TERM_TYPE_DEC_LIT,        // term := <dec_lit>
@@ -81,6 +81,10 @@ typedef enum StatementType {
 	STATEMENT_TYPE_CASE,            // statement := <case>
 	STATEMENT_TYPE_BLOCK            // statement := <block>
 } StatementType;
+typedef enum StatementExpressionType {
+	STATEMENT_EXPR_TYPE_EXPRESSION,
+	STATEMENT_EXPR_TYPE_STATEMENT
+} StatementExpressionType;
 
 typedef struct Program Program;
 typedef struct Reserved Reserved;
@@ -90,6 +94,7 @@ typedef struct Operator Operator;
 typedef struct Expression Expression;
 typedef struct ProcedureDef ProcedureDef;
 typedef struct Statement Statement;
+typedef struct StatementExpression StatementExpression;
 typedef struct ProcedureCall ProcedureCall;
 typedef struct Iff Iff;
 typedef struct Switch Switch;
@@ -104,9 +109,8 @@ typedef enum AST_NodeType {
 	AST_NODE_TYPE_TERMINAL,
 	AST_NODE_TYPE_TERM,
 	AST_NODE_TYPE_OPERATOR,
-	AST_NODE_TYPE_EXPRESSION,
 	AST_NODE_TYPE_PROCEDURE_DEF,
-	AST_NODE_TYPE_STATEMENT,
+	AST_NODE_TYPE_STATEMENT_EXPRESSION,
 	AST_NODE_TYPE_PROCEDURE_CALL,
 	AST_NODE_TYPE_IFF,
 	AST_NODE_TYPE_SWITCH,
@@ -124,8 +128,8 @@ struct Program {
 
 struct Reserved {
 	tokenizer_state state;
-	token_type type;
-	String_View str;
+	token token;
+	// String_View str;
 };
 
 struct Operator {
@@ -138,7 +142,7 @@ struct Terminal {
 	tokenizer_state state;
 	TerminalType type;
 	union {
-		Reserved reserved;
+		// Reserved reserved;
 		String_View id;
 		String_View str_lit;
 		String_View chr_lit;
@@ -193,7 +197,7 @@ struct Expression {
 
 struct Block {
 	tokenizer_state state;
-	cvector_vector_type(Statement) stmts;
+	cvector_vector_type(StatementExpression) items;
 };
 
 struct SwitchBlock {
@@ -210,7 +214,7 @@ struct ProcedureDef {
 
 struct Iff {
 	tokenizer_state state;
-	Expression expression;
+	Expression* expression;
 	Block block;
 };
 
@@ -236,23 +240,33 @@ struct Statement {
 	};
 };
 
+// Able to be both a statement and an expression at once
+struct StatementExpression {
+	StatementExpressionType type;
+	union {
+		Statement* stmt;
+		Expression* expr;
+	};
+};
+
 struct AST_Node {
 	AST_NodeType nodeType;
 	tokenizer_state state;
 	union {
 		Program program;
-		Reserved reserved;
 		Terminal terminal;
 		Operator op;
+		Reserved reserved;
 		Term term;
-		Expression *expression;
 		ProcedureDef *procDef;
-		Statement *statement;
+		StatementExpression stmtExpr;
+		// Expression *expression;
+		// Statement *statement;
 		ProcedureCall *procedureCall;
 		Iff *iff;
 		Switch *switchf;
 		SwitchCase *casef;
-		Block *block;
+		Block block;
 		SwitchBlock *switchBlock;
 	};
 };

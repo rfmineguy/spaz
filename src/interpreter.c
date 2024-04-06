@@ -286,10 +286,13 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 }
 
 void ictx_run(interpreter_ctx* ictx, Program p) {
+	fprintf(stderr, "INTERPRETER OFFLINE\n");
+	return;
+
 	for (AST_Node* n = cvector_begin(p.p); n != cvector_end(p.p); n++) {
 		// ictx_show_stack(ictx);
-		if (n->nodeType == AST_NODE_TYPE_EXPRESSION) {
-			ictx_process_expression(ictx, n->expression);
-		}
+		// if (n->nodeType == AST_NODE_TYPE_EXPRESSION) {
+		// 	ictx_process_expression(ictx, n->expression);
+		// }
 	}
 }

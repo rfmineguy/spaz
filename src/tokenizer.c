@@ -164,26 +164,26 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	// Detect EOF
 	if (ctx->state.cursor >= ctx->content + ctx->content_length - 1)
 		return (token) {.type=T_EOF };
+	if (*ctx->state.cursor == '\0')
+		return (token) {.type=T_EOF };
 
-	const char* start = ctx->state.cursor;
 	tokenizer_state s = ctx->state;
-	// Consume spaces
-	while (isspace(*s.cursor) != 0) {
-		s.cursor++;
-	}
-	// Also consume comments
-	while (strncmp(s.cursor, "//", 2) == 0) {
+	// Consume comments
+	if (strncmp(s.cursor, "//", 2) == 0) {
+		const char* begin = s.cursor;
 		while (*s.cursor != '\n') {
-			s.line++;
-			s.col = 0;
 			s.cursor++;
 		}
 		s.cursor++;
 	}
-	// Consume spaces again
+	// Consume spaces
 	while (isspace(*s.cursor) != 0) {
 		s.cursor++;
 		s.col++;
+	}
+	if (*s.cursor == '\n') {
+		s.cursor++;
+		s.line++;
 	}
 	ctx->state = s;
 
