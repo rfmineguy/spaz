@@ -4,7 +4,7 @@ MAIN           := src/main.c
 TEST_MAIN 	   := tests/test_main.c
 TEST_SOURCES   := tests/munit/munit.c
 SOURCES        := src/interpreter.c src/svimpl.c \
-								  src/tokenizer.c src/parser.c src/ast_helper.c \
+								  src/tokenizer.c src/parser.c src/ast_print.c \
 								  src/b_stacktrace_impl.c
 GETOPT_SOURCES := gengetopt/cmdline.c
 

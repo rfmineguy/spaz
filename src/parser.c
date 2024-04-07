@@ -1,6 +1,6 @@
 #include "parser.h"
 #include "ast.h"
-#include "ast_helper.h"
+#include "ast_print.h"
 #include "cvector.h"
 #include "sl_assert.h"
 #include "tokenizer.h"

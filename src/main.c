@@ -1,5 +1,5 @@
 #include "ast.h"
-#include "ast_helper.h"
+#include "ast_print.h"
 #include "cvector.h"
 #include "interpreter.h"
 #include "tokenizer.h"
