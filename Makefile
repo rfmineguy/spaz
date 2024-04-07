@@ -1,9 +1,12 @@
-CFLAGS := -ggdb
-SOURCES := src/main.c src/interpreter.c src/svimpl.c \
-					 src/tokenizer.c src/parser.c src/ast_helper.c \
-					 src/b_stacktrace_impl.c
+CFLAGS         := -ggdb
+LDFLAGS        := 
+MAIN           := src/main.c
+TEST_MAIN 	   := tests/test_main.c
+TEST_SOURCES   := tests/munit/munit.c
+SOURCES        := src/interpreter.c src/svimpl.c \
+								  src/tokenizer.c src/parser.c src/ast_helper.c \
+								  src/b_stacktrace_impl.c
 GETOPT_SOURCES := gengetopt/cmdline.c
-TEST_SOURCES := tests/test_main.c tests/munit/munit.c
 
 BIN := spaz
 
@@ -55,7 +58,7 @@ gengetopt:
 	gengetopt --input=config.ggo --include-getopt
 	mv cmdline.* gengetopt/
 out/main:
-	gcc $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/$(BIN) -lm
+	gcc $(MAIN) $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/$(BIN) -lm
 out/test_main:
-	gcc $(TEST_SOURCES) $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/test_main -lm
+	gcc $(TEST_MAIN) $(TEST_SOURCES) $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/test_main -lm
 
