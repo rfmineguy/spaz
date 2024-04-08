@@ -28,18 +28,9 @@ int main(int argc, char** argv) {
 	while ((tok = tctx_get_next(&ctx)).type != T_EOF) {
 		tctx_advance(&ctx);
 		if (tok.type == T_EOF) break;
-		// if (tok.type == T_SINGLE_LINE_COMMENT) {
-		// 	printf("SingleLineComment: " SV_Fmt "\n", SV_Arg(tok.text));
-		// 	continue;
-		// }
-		// if(tok.type ==  T_MULTI_LINE_COMMENT) {
-		// 	printf("MultiLineComment: " SV_Fmt "\n", SV_Arg(tok.text));
-		// 	continue;
-		// }
 
 		AST_Node n;
 		int p;
-		// 1. Convert the token in the 
 		if ((p = try_convert_token_to_terminal(tok, &n)) != 0) {
 			pctx_push(&pctx, n);
 		}
@@ -53,7 +44,9 @@ int main(int argc, char** argv) {
 			if (tok.type == T_EOF) {
 				break;
 			}
-			fprintf(stderr, "Couldn't convert the token, [str=" SV_Fmt ", v=%d] to a terminal. Continuing past it anyways.\n", SV_Arg(tok.text), tok.type);
+			fprintf(stderr, "Couldn't convert the token, [str=" SV_Fmt ", v=%d] to a terminal."
+											"Continuing past it anyways.\n",
+											SV_Arg(tok.text), tok.type);
 			fprintf(stderr, "%*s\n", 4, ctx.state.cursor);
 			continue;
 		}
@@ -92,5 +85,5 @@ int main(int argc, char** argv) {
 	pctx_free(&pctx);
 
 	// I think this causes a crash?
-	// cmdline_parser_free(&ai);
+	cmdline_parser_free(&ai);
 }

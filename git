@@ -8,3 +8,7 @@ BIG:: Added a reduction rule for block statements (Note: this is still kind of u
 Finally I padded the values of the token types
 
 END
+
+
+... I was leaking A LOT of memory with regex. Now all the regex is compiled at the beginning and reused, rather than recompiling over and over again. Much better
+
