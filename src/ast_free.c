@@ -6,7 +6,7 @@
 
 int free_depth = 0;
 
-#ifdef DEBUG
+#if defined(DEBUG) && DEBUG==1
 #define BEGIN_FREE_FUNC { printf("BEGIN: %*c%s\n", free_depth * 2, ' ', __FUNCTION__); free_depth++; }
 #define END_FREE_FUNC	{ printf("END: %*c%s\n", free_depth * 2, ' ', __FUNCTION__); free_depth--; }
 #else
