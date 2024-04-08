@@ -1,4 +1,4 @@
-CFLAGS         := -ggdb -DDEBUG=1
+CFLAGS         := -ggdb -DDEBUG=0
 LDFLAGS        := 
 MAIN           := src/main.c
 TEST_MAIN 	   := tests/test_main.c

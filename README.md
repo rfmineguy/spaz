@@ -21,6 +21,7 @@ make build-interpreter # builds interpreter
 make build-tests       # builds tests
 make debug             # starts debugging environment (requires xquartz setup, and the docker container setup)
 ```
+***See Makefile to discover extra options**
 
 Install
 ---
