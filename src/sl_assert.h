@@ -1,6 +1,7 @@
 #ifndef SL_ASSERT_H
 #define SL_ASSERT_H
 #include "b_stacktrace.h"
+#include <stdio.h>
 
 #define sl_assert(expr, fmt, ...) \
 	if (!(expr)) {\

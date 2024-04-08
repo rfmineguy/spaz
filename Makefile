@@ -1,10 +1,11 @@
-CFLAGS         := -ggdb
+CFLAGS         := -ggdb -DDEBUG=1
 LDFLAGS        := 
 MAIN           := src/main.c
 TEST_MAIN 	   := tests/test_main.c
 TEST_SOURCES   := tests/munit/munit.c
 SOURCES        := src/interpreter.c src/svimpl.c \
-								  src/tokenizer.c src/parser.c src/ast_print.c \
+								  src/tokenizer.c src/parser.c \
+									src/ast_print.c src/ast_free.c \
 								  src/b_stacktrace_impl.c
 GETOPT_SOURCES := gengetopt/cmdline.c
 

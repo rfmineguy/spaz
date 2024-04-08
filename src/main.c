@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "ast_free.h"
 #include "ast_print.h"
 #include "cvector.h"
 #include "interpreter.h"
@@ -86,7 +87,9 @@ int main(int argc, char** argv) {
 		ictx_run(&ictx, program.program);
 	}
 
+	ast_free_program(program.program);
 	tctx_free(&ctx);
+	pctx_free(&pctx);
 
 	// I think this causes a crash?
 	// cmdline_parser_free(&ai);

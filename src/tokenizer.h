@@ -47,6 +47,14 @@ typedef struct tokenizer_state {
 	int line, col, index;
 } tokenizer_state;
 
+typedef struct tokenizer_regex_store {
+	regex_t r_string_lit;
+	regex_t r_char_lit;
+	regex_t r_fn, r_if, r_else, r_switch, r_break, r_default;
+	regex_t r_hexlit, r_dbllit, r_declit, r_id;
+	regex_t r_lor, r_land, r_gteq, r_lteq;
+} tokenizer_regex_store;
+
 typedef struct token {
 	token_type type;
 	String_View text;
@@ -57,10 +65,11 @@ typedef struct tokenizer_ctx {
 	char const *content;
 	size_t content_length;
 	tokenizer_state state;
+	tokenizer_regex_store regex_store;
 } tokenizer_ctx;
 
 regex_t       rnew(const char*);
-int           rmatch(const char*, const char*, int*);
+int           rmatch(const char*, regex_t, int*);
 
 const char*   token_str(token_type);
 

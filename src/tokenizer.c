@@ -13,8 +13,7 @@ regex_t rnew(const char* r) {
 	return reg;
 }
 
-int rmatch(const char* s, const char* reg, int* length_out) {
-	regex_t r = rnew(reg);
+int rmatch(const char* s, regex_t r, int* length_out) {
 	regmatch_t match[1];
 	if (regexec(&r, s, 1, match, 0) == 0) {
 		// make sure the match was immediately at s
@@ -26,7 +25,6 @@ int rmatch(const char* s, const char* reg, int* length_out) {
 		*length_out = len;
 		return 0;
 	}
-	regfree(&r);
 	return -1;
 }
 
@@ -54,10 +52,6 @@ char* read_file(const char* filename, size_t* length) {
 	}
 	fclose(f);
 	return content;
-}
-
-void tctx_internal_run_tokenizer(tokenizer_ctx* ctx) {
-	
 }
 
 const char* token_str(token_type t) {
@@ -106,11 +100,51 @@ const char* token_str(token_type t) {
 	}
 }
 
+void tctx_internal_init_regex(tokenizer_ctx* ctx) {
+	ctx->regex_store.r_string_lit = rnew("\\\"([^\\\"]|\n)*\\\"");
+	ctx->regex_store.r_char_lit   = rnew("\\\'(.)\\\'");
+	ctx->regex_store.r_fn         = rnew("fn");
+	ctx->regex_store.r_if         = rnew("if");
+	ctx->regex_store.r_else       = rnew("else");
+	ctx->regex_store.r_switch     = rnew("switch");
+	ctx->regex_store.r_break      = rnew("break");
+	ctx->regex_store.r_default    = rnew("default");
+	ctx->regex_store.r_hexlit     = rnew("0x[0-9a-fA-F]+");
+	ctx->regex_store.r_dbllit     = rnew("[0-9]+\\.[0-9]+");
+	ctx->regex_store.r_declit     = rnew("[0-9]+");
+	ctx->regex_store.r_id         = rnew("[a-zA-Z_][a-zA-Z0-9_]*");
+	ctx->regex_store.r_lor        = rnew("\\|\\|");
+	ctx->regex_store.r_land       = rnew("&&");
+	ctx->regex_store.r_gteq       = rnew(">=");
+	ctx->regex_store.r_lteq       = rnew("<=");
+}
+
+void tctx_internal_free_regex(tokenizer_ctx* ctx) {
+	regfree(&ctx->regex_store.r_string_lit);
+	regfree(&ctx->regex_store.r_char_lit);
+	regfree(&ctx->regex_store.r_fn);
+	regfree(&ctx->regex_store.r_if);
+	regfree(&ctx->regex_store.r_else);
+	regfree(&ctx->regex_store.r_switch);
+	regfree(&ctx->regex_store.r_break);
+	regfree(&ctx->regex_store.r_default);
+	regfree(&ctx->regex_store.r_hexlit);
+	regfree(&ctx->regex_store.r_dbllit);
+	regfree(&ctx->regex_store.r_declit);
+	regfree(&ctx->regex_store.r_id);
+	regfree(&ctx->regex_store.r_lor);
+	regfree(&ctx->regex_store.r_land);
+	regfree(&ctx->regex_store.r_gteq);
+	regfree(&ctx->regex_store.r_lteq);
+	regfree(&ctx->regex_store.r_declit);
+}
+
 tokenizer_ctx tctx_from_file(const char* filename) {
 	tokenizer_ctx ctx = {0};
 	char* content = read_file(filename, &ctx.content_length);
 	ctx.content = content;
 	ctx.state.cursor = content;
+	tctx_internal_init_regex(&ctx);
 	return ctx;
 }
 
@@ -123,6 +157,7 @@ tokenizer_ctx tctx_from_cstr(const char* cstr) {
 }
 
 void tctx_free(tokenizer_ctx* ctx) {
+	tctx_internal_free_regex(ctx);
 	free((void*) ctx->content);
 }
 
@@ -188,24 +223,25 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	ctx->state = s;
 
 	// Match code
-	RMATCH("\\\"([^\\\"]|\n)*\\\"", T_STRING_LIT);
-	RMATCH("\\\'(.)\\\'", T_CHAR_LIT);
-	RMATCH("fn", T_FN);
-	RMATCH("if", T_IF);
-	RMATCH("else", T_ELSE);
-	RMATCH("switch", T_SWITCH);
-	RMATCH("break", T_BREAK);
-	RMATCH("default", T_DEFAULT);
-	RMATCH("0x[0-9a-fA-F]+", T_HEX_LIT);
-	RMATCH("[0-9]+\\.[0-9]+", T_DOUBLE_LIT);
-	RMATCH("[0-9]+", T_DECIMAL_LIT);
-	RMATCH("[a-zA-Z_][a-zA-Z0-9_]*", T_ID);
-	RMATCH("\\|\\|", T_LOR);
-	RMATCH("&&", T_LAND);
+	//   To see the actual regex strings, view tctx_internal_init_regex(..)
+	RMATCH(ctx->regex_store.r_string_lit, T_STRING_LIT);
+	RMATCH(ctx->regex_store.r_char_lit, T_CHAR_LIT);
+	RMATCH(ctx->regex_store.r_fn, T_FN);
+	RMATCH(ctx->regex_store.r_if, T_IF);
+	RMATCH(ctx->regex_store.r_else, T_ELSE);
+	RMATCH(ctx->regex_store.r_switch, T_SWITCH);
+	RMATCH(ctx->regex_store.r_break, T_BREAK);
+	RMATCH(ctx->regex_store.r_default, T_DEFAULT);
+	RMATCH(ctx->regex_store.r_hexlit, T_HEX_LIT);
+	RMATCH(ctx->regex_store.r_dbllit, T_DOUBLE_LIT);
+	RMATCH(ctx->regex_store.r_declit, T_DECIMAL_LIT);
+	RMATCH(ctx->regex_store.r_id, T_ID);
+	RMATCH(ctx->regex_store.r_lor, T_LOR);
+	RMATCH(ctx->regex_store.r_land, T_LAND);
+	RMATCH(ctx->regex_store.r_gteq, T_GTEQ);
+	RMATCH(ctx->regex_store.r_lteq, T_LTEQ);
 	CHMATCH('|', T_BOR);
 	CHMATCH('&', T_BAND);
-	RMATCH(">=", T_GTEQ);
-	RMATCH("<=", T_LTEQ);
 	CHMATCH('>', T_GT);
 	CHMATCH('<', T_LT);
 	CHMATCH(':', T_COLON);

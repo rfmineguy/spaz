@@ -47,7 +47,7 @@ void ast_print_node(AST_Node node, int depth) {
 	case AST_NODE_TYPE_PROCEDURE_DEF:  			ast_print_procedure_def(node.procDef, depth); break;
 	case AST_NODE_TYPE_STATEMENT_EXPRESSION:ast_print_stmt_expr(node.stmtExpr, depth); break;
 	// case AST_NODE_TYPE_STATEMENT:           ast_print_statement(node.statement, depth); break;
-	case AST_NODE_TYPE_PROCEDURE_CALL:      ast_print_procedure_call(node.procedureCall, depth); break;
+	// case AST_NODE_TYPE_PROCEDURE_CALL:      ast_print_procedure_call(node.procedureCall, depth); break;
 	case AST_NODE_TYPE_IFF: 					      ast_print_iff(node.iff, depth); break;	
 	case AST_NODE_TYPE_SWITCH:  			      ast_print_switch(node.switchf, depth); break; 
 	case AST_NODE_TYPE_CASE: 					      ast_print_switch_case(node.casef, depth); break; 
@@ -132,7 +132,7 @@ void ast_print_statement      (Statement *stmt, int depth) {
 	printf("%*cStatement (Print not implemented)\n", depth * 2, ' ');
 	switch (stmt->type) {
 		case STATEMENT_TYPE_PROCEDURE_DEF:  break;
-		case STATEMENT_TYPE_PROCEDURE_CALL: break;
+		// case STATEMENT_TYPE_PROCEDURE_CALL: break;
 		case STATEMENT_TYPE_IFF:            break;
 		case STATEMENT_TYPE_SWITCH:         break;
 		case STATEMENT_TYPE_CASE:         	break;

@@ -75,7 +75,7 @@ typedef enum ExpressionType {
 typedef enum StatementType {
 	// STATEMENT_TYPE_EXPRESSION,   // statement := <expression>   // Not really
 	STATEMENT_TYPE_PROCEDURE_DEF,   // statement := <procedure_def>
-	STATEMENT_TYPE_PROCEDURE_CALL,  // statement := <procedure_call>
+	// STATEMENT_TYPE_PROCEDURE_CALL,  // statement := <procedure_call>
 	STATEMENT_TYPE_IFF,             // statement := <iff>
 	STATEMENT_TYPE_SWITCH,          // statement := <switch>
 	STATEMENT_TYPE_CASE,            // statement := <case>
@@ -262,7 +262,7 @@ struct AST_Node {
 		StatementExpression stmtExpr;
 		// Expression *expression;
 		// Statement *statement;
-		ProcedureCall *procedureCall;
+		// ProcedureCall *procedureCall;
 		Iff *iff;
 		Switch *switchf;
 		SwitchCase *casef;
