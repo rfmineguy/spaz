@@ -122,9 +122,12 @@ void ast_free_switch_case    (SwitchCase* n){
 	END_FREE_FUNC
 }
 void ast_free_block   				(Block n){
-	BEGIN_FREE_FUNC
-	sl_assert(0, "block free not implemented");
-	END_FREE_FUNC
+	BEGIN_FREE_FUNC;
+	for (StatementExpression* it = cvector_begin(n.items); it != cvector_end(n.items); it++) {
+		ast_free_stmt_expr(*it);
+	}
+	cvector_free(n.items);
+	END_FREE_FUNC;
 }
 void ast_free_switch_block   (SwitchBlock* n){
 	BEGIN_FREE_FUNC
