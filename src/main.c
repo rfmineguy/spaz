@@ -1,3 +1,4 @@
+#define DEBUG_AST 1
 #include "ast.h"
 #include "ast_free.h"
 #include "ast_print.h"

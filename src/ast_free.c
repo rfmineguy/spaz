@@ -2,17 +2,21 @@
 #include "ast.h"
 #include "cvector.h"
 #include "sl_assert.h"
+#include "sl_log.h"
 #include <stdio.h>
 
 int free_depth = 0;
 
-#if defined(DEBUG) && DEBUG==1
-#define BEGIN_FREE_FUNC { printf("BEGIN: %*c%s\n", free_depth * 2, ' ', __FUNCTION__); free_depth++; }
-#define END_FREE_FUNC	{ printf("END: %*c%s\n", free_depth * 2, ' ', __FUNCTION__); free_depth--; }
-#else
-#define BEGIN_FREE_FUNC {}
-#define END_FREE_FUNC {}
-#endif
+#define BEGIN_FREE_FUNC \
+{\
+	sl_log_free("BEGIN : %*c%s", free_depth * 2, ' ', __FUNCTION__);\
+	free_depth++;\
+}
+#define END_FREE_FUNC \
+{\
+	sl_log_free("END   : %*c%s", free_depth * 2, ' ', __FUNCTION__);\
+	free_depth--;\
+}
 
 void ast_free_node           (AST_Node n){
 	switch (n.nodeType) {

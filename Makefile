@@ -1,4 +1,6 @@
-CFLAGS         := -ggdb -DDEBUG=0
+#DEBUG_LOG - enable printing of the ast
+
+CFLAGS         := -ggdb -DDEBUG_FREE=0
 LDFLAGS        := 
 MAIN           := src/main.c
 TEST_MAIN 	   := tests/test_main.c

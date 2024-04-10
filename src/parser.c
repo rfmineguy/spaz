@@ -3,6 +3,7 @@
 #include "ast_print.h"
 #include "cvector.h"
 #include "sl_assert.h"
+#include "sl_log.h"
 #include "tokenizer.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -281,7 +282,7 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		}
 		// subtract 1 because we dont want to count the expression for the if condition
 		// printf("Number of expressions in block: %d\n", offset - 1); 
-		printf("offset: %d\n", offset);
+		sl_log("offset: %d\n", offset);
 		// Put the expressions and statements into the block node
 		for (int i = 0; i < offset - 1; i++) {
 			AST_Node n = pctx_peek_offset(pctx, offset - 1 - i);
@@ -293,6 +294,14 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		return offset + 2;
 	}
 
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
+			pctx_peek_offset(pctx, 0).reserved.token.type == T_IF) {
+		sl_log("Found <if>");
+	}
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_BLOCK) {
+		sl_log("Found <block>");
+	}
+
 	// 'if' expression block -> if
 	//  NOTE: Incomplete
 	if (pctx_peek_offset(pctx, 2).nodeType == AST_NODE_TYPE_RESERVED &&
@@ -302,22 +311,6 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 			pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_BLOCK) {
 		sl_assert(0, "Reducing if statements unsupported right now");
 	}
-
-	/*
-	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
-			pctx_peek_offset(pctx, 0).reserved.token_type == T_IF) {// &&
-			//pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_EXPRESSION) {
-		printf("Reducing if\n");
-		// AST_Node iff = pctx_peek_offset(pctx, 1);
-		// AST_Node expr = pctx_peek_offset(pctx, 0);
-		// out_n->nodeType = AST_NODE_TYPE_IFF;
-		// out_n->iff = malloc(sizeof(Iff));
-		// out_n->iff->state = expr.state;
-		// out_n->iff->expression = expr.expression;
-		// out_n->iff->state = expr.state;
-		return 1;
-	}
-	*/
 
 	// reduce terminals
 	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_TERMINAL) {

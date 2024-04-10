@@ -11,6 +11,6 @@ print .
 print .
 print
 
-{
+if 4 5 > {
 4 5 +
 }

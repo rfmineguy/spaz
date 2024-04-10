@@ -16,7 +16,7 @@ void ast_free_procedure_call (ProcedureCall*);
 void ast_free_iff            (Iff*);
 void ast_free_switch         (Switch*);
 void ast_free_switch_case    (SwitchCase*);
-void ast_free_block   				(Block);
+void ast_free_block   			 (Block);
 void ast_free_switch_block   (SwitchBlock*);
 
 #endif
