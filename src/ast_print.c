@@ -49,7 +49,6 @@ void ast_print_node(AST_Node node, int depth) {
 	case AST_NODE_TYPE_STATEMENT_EXPRESSION:ast_print_stmt_expr(node.stmtExpr, depth); break;
 	// case AST_NODE_TYPE_STATEMENT:           ast_print_statement(node.statement, depth); break;
 	// case AST_NODE_TYPE_PROCEDURE_CALL:      ast_print_procedure_call(node.procedureCall, depth); break;
-	case AST_NODE_TYPE_IFF: 					      ast_print_iff(node.iff, depth); break;	
 	case AST_NODE_TYPE_SWITCH:  			      ast_print_switch(node.switchf, depth); break; 
 	case AST_NODE_TYPE_CASE: 					      ast_print_switch_case(node.casef, depth); break; 
 	case AST_NODE_TYPE_BLOCK: 				      ast_print_block(node.block, depth); break; 
@@ -130,11 +129,11 @@ void ast_print_expression     (Expression *expr, int depth) {
 void ast_print_procedure_def  (ProcedureDef *proc_def, int depth) {
 }
 void ast_print_statement      (Statement *stmt, int depth) {
-	sl_log_ast("%*cStatement (Print not implemented)", depth * 2, ' ');
+	sl_log_ast("%*cStatement: ", depth * 2, ' ');
 	switch (stmt->type) {
 		case STATEMENT_TYPE_PROCEDURE_DEF:  break;
 		// case STATEMENT_TYPE_PROCEDURE_CALL: break;
-		case STATEMENT_TYPE_IFF:            break;
+		case STATEMENT_TYPE_IFF:            ast_print_iff(stmt->iff, depth+1); break;
 		case STATEMENT_TYPE_SWITCH:         break;
 		case STATEMENT_TYPE_CASE:         	break;
 		case STATEMENT_TYPE_BLOCK:         	break;
@@ -146,9 +145,10 @@ void ast_print_procedure_call (ProcedureCall *proc_call, int depth) {
 	sl_log_ast("%*cProcedureCall: ", depth * 2, ' ');
 	sl_log_ast("%*cName: " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(proc_call->name));
 }
-void ast_print_iff            (Iff *iff, int depth) {
-	// Print expression
-	// Print block
+void ast_print_iff            (Iff iff, int depth) {
+	sl_log_ast("%*cIff: ", depth * 2, ' ');
+	ast_print_expression(iff.expression, depth + 1);
+	ast_print_block(iff.block, depth + 1);
 }
 void ast_print_switch         (Switch *sswitch, int depth) {
 }

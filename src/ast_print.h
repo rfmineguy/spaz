@@ -14,7 +14,7 @@ void ast_print_expression     (Expression*, int);
 void ast_print_statement      (Statement*, int);
 void ast_print_procedure_def  (ProcedureDef*, int);
 void ast_print_procedure_call (ProcedureCall*, int);
-void ast_print_iff            (Iff*, int);
+void ast_print_iff            (Iff, int);
 void ast_print_switch         (Switch*, int);
 void ast_print_switch_case    (SwitchCase*, int);
 void ast_print_block   				(Block, int);

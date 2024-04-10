@@ -13,7 +13,7 @@ void ast_free_expression     (Expression*);
 void ast_free_statement      (Statement*);
 void ast_free_procedure_def  (ProcedureDef*);
 void ast_free_procedure_call (ProcedureCall*);
-void ast_free_iff            (Iff*);
+void ast_free_iff            (Iff);
 void ast_free_switch         (Switch*);
 void ast_free_switch_case    (SwitchCase*);
 void ast_free_block   			 (Block);

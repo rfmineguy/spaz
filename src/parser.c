@@ -293,10 +293,6 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		return offset + 1;
 	}
 
-	// if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
-	// 		pctx_peek_offset(pctx, 0).reserved.token.type == T_IF) {
-	// 	sl_log("Found <if>");
-	// }
 	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_BLOCK) {
 		AST_Node n = pctx_peek_offset(pctx, 1);
 		AST_Node n1 = pctx_peek_offset(pctx, 2);
@@ -312,7 +308,15 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 			pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_STATEMENT_EXPRESSION &&
 			pctx_peek_offset(pctx, 1).stmtExpr.type == STATEMENT_EXPR_TYPE_EXPRESSION &&
 			pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_BLOCK) {
-		sl_assert(0, "Reducing if statements unsupported right now");
+		AST_Node expr = pctx_peek_offset(pctx, 1);
+		AST_Node block = pctx_peek_offset(pctx, 0);
+		out_n->nodeType = AST_NODE_TYPE_STATEMENT_EXPRESSION;
+		out_n->stmtExpr.stmt = malloc(sizeof(Statement));
+		out_n->stmtExpr.type = STATEMENT_EXPR_TYPE_STATEMENT;
+		out_n->stmtExpr.stmt->type = STATEMENT_TYPE_IFF;
+		out_n->stmtExpr.stmt->iff.block = block.block;
+		out_n->stmtExpr.stmt->iff.expression = expr.stmtExpr.expr;
+		return 3;
 	}
 
 	// reduce terminals

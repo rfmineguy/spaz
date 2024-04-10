@@ -29,7 +29,6 @@ void ast_free_node           (AST_Node n){
 	case AST_NODE_TYPE_PROCEDURE_DEF:  			ast_free_procedure_def(n.procDef); break;
 	case AST_NODE_TYPE_STATEMENT_EXPRESSION:ast_free_stmt_expr(n.stmtExpr); break;
 	// case AST_NODE_TYPE_PROCEDURE_CALL:      ast_free_procedure_call(n.procedureCall); break;
-	case AST_NODE_TYPE_IFF: 					      ast_free_iff(n.iff); break;	
 	case AST_NODE_TYPE_SWITCH:  			      ast_free_switch(n.switchf); break; 
 	case AST_NODE_TYPE_CASE: 					      ast_free_switch_case(n.casef); break; 
 	case AST_NODE_TYPE_BLOCK: 				      ast_free_block(n.block); break; 
@@ -97,7 +96,10 @@ void ast_free_expression     (Expression* n){
 }
 void ast_free_statement      (Statement* n){
 	BEGIN_FREE_FUNC
-	sl_assert(0, "statement free not implemented");
+	switch (n->type) {
+		case STATEMENT_TYPE_IFF: ast_free_iff(n->iff);
+		default: break;
+	}
 	END_FREE_FUNC
 }
 void ast_free_procedure_def  (ProcedureDef* n){
@@ -110,9 +112,10 @@ void ast_free_procedure_call (ProcedureCall* n){
 	// Nothing to free for Expression::Term
 	END_FREE_FUNC
 }
-void ast_free_iff            (Iff* n){
+void ast_free_iff            (Iff n){
 	BEGIN_FREE_FUNC
-	sl_assert(0, "iff free not implemented");
+	ast_free_block(n.block);
+	ast_free_expression(n.expression);
 	END_FREE_FUNC
 }
 void ast_free_switch         (Switch* n){
