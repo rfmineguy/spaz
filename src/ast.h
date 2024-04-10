@@ -184,6 +184,9 @@ struct Expression {
 	ExpressionType type;
 	union {
 		struct {
+			Operator op;
+		} StackOp;
+		struct {
 			Expression *left, *right;
 			Operator operation;
 		} EEO;

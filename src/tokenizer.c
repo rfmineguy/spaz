@@ -136,7 +136,6 @@ void tctx_internal_free_regex(tokenizer_ctx* ctx) {
 	regfree(&ctx->regex_store.r_land);
 	regfree(&ctx->regex_store.r_gteq);
 	regfree(&ctx->regex_store.r_lteq);
-	regfree(&ctx->regex_store.r_declit);
 }
 
 tokenizer_ctx tctx_from_file(const char* filename) {

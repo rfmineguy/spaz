@@ -58,7 +58,7 @@ void ast_print_node(AST_Node node, int depth) {
 }
 
 void ast_print_program  			(Program prog, int depth) {
-	sl_log_ast("%*cProgram: \n", depth * 2, ' ');
+	sl_log_ast("%*cProgram:", depth * 2, ' ');
 	for (AST_Node* it = cvector_begin(prog.p); it != cvector_end(prog.p); it++) {
 		ast_print_node(*it, depth+1);
 	}
@@ -118,7 +118,8 @@ void ast_print_expression     (Expression *expr, int depth) {
 			ast_print_term(expr->ETerm.term, depth + 1);
 			break;
 		case EXPRESSION_TYPE_STACK_OP:
-			/* ast_print_operator(expr->EEO.operation, depth + 1); */
+			sl_log_ast("%*cExpression(StackOp): ", depth * 2, ' ');
+			ast_print_operator(expr->StackOp.op, depth + 1);
 			break;
 		case EXPRESSION_TYPE_PROC_CALL:
 			sl_log_ast("%*cExpression(ProcCall): ", depth * 2, ' ');

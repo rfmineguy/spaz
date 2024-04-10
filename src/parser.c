@@ -200,6 +200,19 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		return 1;
 	}
 
+	// stack_op -> expression
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_OPERATOR &&
+			pctx_peek_offset(pctx, 0).op.type == OPERATOR_TYPE_STACK) {
+		sl_log("stack operator");
+		AST_Node expr1 = pctx_peek_offset(pctx, 0);
+		out_n->nodeType = AST_NODE_TYPE_STATEMENT_EXPRESSION;
+		out_n->stmtExpr.type = STATEMENT_EXPR_TYPE_EXPRESSION;
+		out_n->stmtExpr.expr = malloc(sizeof(Expression));
+		out_n->stmtExpr.expr->type = EXPRESSION_TYPE_STACK_OP;
+		out_n->stmtExpr.expr->StackOp.op = expr1.op;
+		return 1;
+	}
+
 	// expression expression op -> expression
 	if (pctx_peek_offset(pctx, 2).nodeType == AST_NODE_TYPE_STATEMENT_EXPRESSION &&
 			pctx_peek_offset(pctx, 1).nodeType == AST_NODE_TYPE_STATEMENT_EXPRESSION &&

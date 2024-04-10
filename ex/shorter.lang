@@ -11,6 +11,7 @@ print .
 print .
 print
 
-if 4 5 > {
-4 5 +
+if , 5 > {
+	4 5 + print .
+	9 8 * 4 - print .
 }
