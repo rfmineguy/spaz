@@ -68,7 +68,7 @@ AST_Node pctx_peek(parse_ctx* pctx) {
 
 AST_Node pctx_peek_offset(parse_ctx* pctx, int n) {
 	if (pctx->pstack.length <= n) {
-		return (AST_Node){.nodeType=AST_NODE_TYPE_UNDEFINED}; // shouldn't happen. lol, famous last words
+		return (AST_Node){.nodeType=AST_NODE_TYPE_STACK_UNDERFLOW};
 	}
 	return pctx->pstack.data[pctx->pstack.top - n];
 }
@@ -118,7 +118,6 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 			status = 1;
 			break;
 		case T_DOUBLE_LIT:
-			// printf("DoubleLit\n");
 			nt = AST_NODE_TYPE_TERMINAL;
 			t = P_NEW_TERMINAL(TERMINAL_TYPE_DOUBLE_LIT, .dbl_lit=interpret_double_sv_to_double(tok.text));
 			status = 1;
@@ -249,7 +248,7 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 			// Have we searched past the extent of the stack? 
 			// If so we wont find the opening '{' and thus it is missing
 			//    Fail case
-			if (pctx->pstack.top - offset < 0) {
+			if (pctx_peek_offset(pctx, offset).nodeType == AST_NODE_TYPE_STACK_UNDERFLOW) {
 				is_valid_block = false;
 				msg = "No opening '{' found";
 				break;
@@ -291,15 +290,19 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 
 		pctx_print_stack_lite(pctx);
 		// Return with the number of nodes to pop (the inner expressions + the '{' and '}')
-		return offset + 2;
+		return offset + 1;
 	}
 
-	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
-			pctx_peek_offset(pctx, 0).reserved.token.type == T_IF) {
-		sl_log("Found <if>");
-	}
+	// if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
+	// 		pctx_peek_offset(pctx, 0).reserved.token.type == T_IF) {
+	// 	sl_log("Found <if>");
+	// }
 	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_BLOCK) {
+		AST_Node n = pctx_peek_offset(pctx, 1);
+		AST_Node n1 = pctx_peek_offset(pctx, 2);
 		sl_log("Found <block>");
+		sl_log("1 -> %d", n.nodeType);
+		sl_log("2 -> %d", n1.nodeType);
 	}
 
 	// 'if' expression block -> if

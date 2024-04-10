@@ -110,7 +110,7 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 			}
 			return;
 		}
-		sl_assert(0, "Proc call not implemented");
+		sl_assert(0, "Proc call for '" SV_Fmt "' not implemented", SV_Arg(exp->EProcCall.proc_call.name));
 	}
 	if (exp->type == EXPRESSION_TYPE_EEO) {
 		ictx_process_expression(ictx, exp->EEO.left);
