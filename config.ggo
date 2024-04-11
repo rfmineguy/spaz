@@ -1,7 +1,7 @@
 package "sli"
 version "1.0.0"
-purpose "Interpreter"
-usage "<usage>"
+purpose "An interpreter for spaz"
+usage "spaz [-f file] [-pvi]"
 description "StackLang interpreter"
 versiontext "Developed by Riley Fischer"
 
