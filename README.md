@@ -15,7 +15,7 @@ However MacOS's options for debuggers is quite limited if you don't want to use 
 
 Blog
 ---
-I've started a blog recently about my progress on this project. You can find it here ![Spaz Blog](https://spazlang.blogspot.com/)
+I've started a blog recently about my progress on this project. You can find it here [Spaz Blog](https://spazlang.blogspot.com/)
 
 Build
 ---
