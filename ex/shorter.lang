@@ -11,7 +11,10 @@ print .
 print .
 print
 
-if , 5 > {
+if , 5 > , 3 {
 	4 5 + print .
 	9 8 * 4 - print .
+	if , 5 < , 9 > || {
+		"Input out of range" print
+	}
 }

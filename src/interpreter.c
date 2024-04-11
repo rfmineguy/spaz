@@ -1,5 +1,7 @@
 #include "interpreter.h"
+#include "interpreter_builtins.h"
 #include "ast.h"
+#include "sl_log.h"
 #include "sv.h"
 #include <stdio.h>
 #include "sl_assert.h"
@@ -54,6 +56,9 @@ void ictx_show_stack(interpreter_ctx* ictx) {
 	}
 
 void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
+	// =================
+	// Term
+	// =================
 	if (exp->type == EXPRESSION_TYPE_TERM) {
 		switch (exp->ETerm.term.type) {
 			case TERM_TYPE_CHR_LIT:
@@ -80,38 +85,50 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 		}
 		return;
 	}
-	// if (exp->type == EXPRESSION_TYPE_STACK_OP) {
-	// 	assert(0 && "Stack op not implemented");
-	// }
+	// =================
+	// StackOp
+	// =================
+	if (exp->type == EXPRESSION_TYPE_STACK_OP) {
+		if (sv_eq(exp->StackOp.op.op, SV("."))) {
+			ictx->stack_top--;
+			return;
+		}
+		/**
+		 *    Operation: ;
+		 *    Function: Duplicate the top of the stack
+		 */
+		if (sv_eq(exp->EEO.operation.op, SV(";"))) {
+			stack_node n = ictx->stack[ictx->stack_top];
+			ictx->stack[++ictx->stack_top] = n;
+			return;
+		}
+	}
+
+	// =================
+	// ProcedureCall
+	// =================
 	if (exp->type == EXPRESSION_TYPE_PROC_CALL) {
 		if (sv_eq(exp->EProcCall.proc_call.name, SV("print"))) {
 			stack_node l = ictx->stack[ictx->stack_top];
-			/// ictx_show_stack(ictx);
-			switch (l.type) {
-				case INTEGER:
-					printf("%d\n", l.integerLiteral);
-					break;
-				case CHAR:
-					printf(SV_Fmt "\n", SV_Arg(l.charLiteral));
-					break;
-				case STRING: {
-					String_View s;
-					s.data = l.stringLiteral.data + 1;
-					s.count = l.stringLiteral.count - 2;
-					printf(SV_Fmt "\n", SV_Arg(s));
-					break;
-				}
-				case DOUBLE:
-					printf("%0.4f\n", l.doubleLiteral);
-					break;
-				case UNDEFINED:
-					printf("val=%d, type=%s\n", l.type, ictx_stack_node_type_to_str(UNDEFINED));
-					break;
-			}
+			interp_builtin_print(l);
+			return;
+		}
+		if (sv_eq(exp->EProcCall.proc_call.name, SV("println"))) {
+			stack_node l = ictx->stack[ictx->stack_top];
+			interp_builtin_println(l);
+			return;
+		}
+		if (sv_eq(exp->EProcCall.proc_call.name, SV("input"))) {
+			stack_node l = {0};
+			interp_builtin_input(&l);
+			ictx->stack[++ictx->stack_top] = l;
 			return;
 		}
 		sl_assert(0, "Proc call for '" SV_Fmt "' not implemented", SV_Arg(exp->EProcCall.proc_call.name));
 	}
+	// =======================
+	// EEO    (Expr, Expr, Op)
+	// =======================
 	if (exp->type == EXPRESSION_TYPE_EEO) {
 		ictx_process_expression(ictx, exp->EEO.left);
 		ictx_process_expression(ictx, exp->EEO.right);
@@ -263,36 +280,32 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
-		/**
-		 *    Operation: .
-		 *    Functon: Pop the top of the stack
-		 */
-		if (sv_eq(exp->EEO.operation.op, SV("."))) {
-			ictx->stack_top--;
-			return;
-		}
-		/**
-		 *    Operation: ;
-		 *    Function: Duplicate the top of the stack
-		 */
-		if (sv_eq(exp->EEO.operation.op, SV(";"))) {
-			stack_node n = ictx->stack[ictx->stack_top];
-			ictx->stack[ictx->stack_top++] = n;
-			return;
-		}
 
 		sl_assert(0, "Undefined operation " SV_Fmt "\n", SV_Arg(exp->EEO.operation.op));
 	}
 }
 
+void ictx_process_statement(interpreter_ctx* ictx, Statement* stmt) {
+}
+
+void ictx_process_stmt_expr(interpreter_ctx* ictx, StatementExpression stmtexpr) {
+	switch (stmtexpr.type) {
+		case STATEMENT_EXPR_TYPE_EXPRESSION:
+			ictx_process_expression(ictx, stmtexpr.expr);
+			break;
+		case STATEMENT_EXPR_TYPE_STATEMENT:
+			ictx_process_statement(ictx, stmtexpr.stmt);
+			break;
+	}
+}
+
 void ictx_run(interpreter_ctx* ictx, Program p) {
-	fprintf(stderr, "INTERPRETER OFFLINE\n");
-	return;
+	// fprintf(stderr, "INTERPRETER OFFLINE\n");
+	// return;
 
 	for (AST_Node* n = cvector_begin(p.p); n != cvector_end(p.p); n++) {
-		// ictx_show_stack(ictx);
-		// if (n->nodeType == AST_NODE_TYPE_EXPRESSION) {
-		// 	ictx_process_expression(ictx, n->expression);
-		// }
+		if (n->nodeType == AST_NODE_TYPE_STATEMENT_EXPRESSION) {
+			ictx_process_stmt_expr(ictx, n->stmtExpr);
+		}
 	}
 }

@@ -34,5 +34,7 @@ interpreter_ctx ictx_new();
 void  					ictx_run(interpreter_ctx*, Program);
 
 // actions
+void ictx_process_stmt_expr(interpreter_ctx*, StatementExpression);
 void ictx_process_expression(interpreter_ctx*, Expression*);
+void ictx_process_statement(interpreter_ctx*, Statement*);
 #endif

@@ -45,10 +45,6 @@ void 							pctx_pop_n(parse_ctx*, int);
 void 							pctx_print_stack(parse_ctx*);
 void 							pctx_print_stack_lite(parse_ctx*);
 
-int interpret_decimal_sv_to_int(String_View);
-int interpret_hex_sv_to_int(String_View);
-double interpret_double_sv_to_double(String_View);
-
 // Parse logic
 // Params:
 //   - token   :  token to reduce

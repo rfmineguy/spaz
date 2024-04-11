@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "convert.h"
 #include "ast.h"
 #include "ast_print.h"
 #include "cvector.h"
@@ -114,17 +115,17 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 			break;
 		case T_HEX_LIT:
 			nt = AST_NODE_TYPE_TERMINAL;
-			t = P_NEW_TERMINAL(TERMINAL_TYPE_HEX_LIT, .integer_lit=interpret_hex_sv_to_int(tok.text));
+			t = P_NEW_TERMINAL(TERMINAL_TYPE_HEX_LIT, .integer_lit=convert_hex_sv_to_int(tok.text));
 			status = 1;
 			break;
 		case T_DOUBLE_LIT:
 			nt = AST_NODE_TYPE_TERMINAL;
-			t = P_NEW_TERMINAL(TERMINAL_TYPE_DOUBLE_LIT, .dbl_lit=interpret_double_sv_to_double(tok.text));
+			t = P_NEW_TERMINAL(TERMINAL_TYPE_DOUBLE_LIT, .dbl_lit=convert_double_sv_to_double(tok.text));
 			status = 1;
 			break;
 		case T_DECIMAL_LIT:
 			nt = AST_NODE_TYPE_TERMINAL;
-			t=P_NEW_TERMINAL(TERMINAL_TYPE_DEC_LIT, .integer_lit=interpret_decimal_sv_to_int(tok.text));
+			t=P_NEW_TERMINAL(TERMINAL_TYPE_DEC_LIT, .integer_lit=convert_decimal_sv_to_int(tok.text));
 			status = 1;
 			break;
 		case T_STRING_LIT:
@@ -392,46 +393,4 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 	}
 
 	return 0; // didn't reduce anything
-}
-
-int ishexchar(char c) {
-	c = tolower(c);
-	return c >= 'a' && c <= 'f';
-}
-
-int interpret_decimal_sv_to_int(String_View sv) {
-	int v = 0;
-	for (int i = 0; i < sv.count; i++) {
-		int exponent = (sv.count - i - 1);
-		int digit = sv.data[i] - '0';
-		v += (int)pow(10, exponent) * digit;
-	}
-	return v;
-}
-
-int interpret_hex_sv_to_int(String_View sv) {
-	sv_chop_left(&sv, 2);   // chop off the "0x"
-	int value = 0;
-	for (int i = 0; i < sv.count; i++) {
-		int digit = 0;
-		if (isdigit(sv.data[i])) {
-			digit = sv.data[i] - '0';
-		}
-		else if (ishexchar(sv.data[i])) {
-			digit = sv.data[i] - 'a' + 10;
-		}
-		int exponent = (sv.count - i - 1);
-		int v = (int)pow(16, exponent) * digit;
-		value += (int)pow(16, exponent) * digit;
-	}
-	return value;
-}
-
-// 42542.423
-double interpret_double_sv_to_double(String_View sv) {
-	String_View left = sv_chop_by_delim(&sv, '.');
-	int integer_part = interpret_decimal_sv_to_int(left);
-	int decimal_part = interpret_decimal_sv_to_int(sv);
-	double decimal = (double) decimal_part / pow(10, sv.count);
-	return integer_part + decimal;
 }

@@ -12,3 +12,6 @@ END
 
 ... I was leaking A LOT of memory with regex. Now all the regex is compiled at the beginning and reused, rather than recompiling over and over again. Much better
 
+
+Apr 10 9AM
+- support for stack operators within expressions

@@ -77,6 +77,7 @@ int main(int argc, char** argv) {
 	}
 
 	if (ai.interpret_given) {
+		printf("Interpretting program\n");
 		interpreter_ctx ictx = ictx_new();
 		ictx_run(&ictx, program.program);
 	}
