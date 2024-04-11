@@ -10,8 +10,7 @@ SOURCES        := src/interpreter.c src/interpreter_builtins.c\
 									src/ast_print.c src/ast_free.c \
 								  src/b_stacktrace_impl.c
 GETOPT_SOURCES := gengetopt/cmdline.c
-
-BIN := spaz
+BIN  					 := spaz
 
 #default install directory
 ifndef INSTALL_DIR
@@ -22,7 +21,8 @@ endif
 .PHONY: build-all build-interpreter build-tests
 .PHONY: run-tests
 .PHONY: gengetopt
-.PHONY: info
+.PHONY: debug
+.PHONY: info info-deps info-nondeps
 
 #  ===============
 #   UTILITY targets
@@ -44,6 +44,11 @@ run-tests: build-tests
 debug:
 	docker run --rm -it -v $(shell pwd):$(shell pwd) -w $(shell pwd) alpine sh -c "gcc $(SOURCES) $(GETOPT_SOURCES) $(CFLAGS) -o out/$(BIN)_x86"
 	docker run --rm -it -e DISPLAY=192.168.1.142:0 -v $(shell pwd):$(shell pwd) -w $(shell pwd) alpine gf2 ./out/$(BIN)_x86
+info: info-deps info-nondeps
+info-deps:
+	cloc --by-file src/ --match-f="sv.h|cvector.h"
+info-nondeps:
+	cloc --by-file src/ --not-match-f="sv.h|cvector.h"
 
 #  ===============
 #   INSTALL targets
