@@ -1,0 +1,5 @@
+"Enter a number: " print .
+input
+if , 5 == {
+	"Hello World" println
+}

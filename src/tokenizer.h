@@ -24,7 +24,7 @@ typedef enum token_type {
 
 	// LogicOp 
 	T_LOGIC_BEG = 300, 
-	T_EQ, T_GT, T_LT, T_GTEQ, T_LTEQ,
+	T_DEQ, T_GT, T_LT, T_GTEQ, T_LTEQ,
 	T_LOR, T_LAND, // logical
 	T_LOGIC_END,
 
@@ -52,7 +52,7 @@ typedef struct tokenizer_regex_store {
 	regex_t r_char_lit;
 	regex_t r_fn, r_if, r_else, r_switch, r_break, r_default;
 	regex_t r_hexlit, r_dbllit, r_declit, r_id;
-	regex_t r_lor, r_land, r_gteq, r_lteq;
+	regex_t r_lor, r_land, r_gteq, r_lteq, r_deq;
 } tokenizer_regex_store;
 
 typedef struct token {

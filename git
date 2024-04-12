@@ -15,3 +15,8 @@ END
 
 Apr 10 9AM
 - support for stack operators within expressions
+
+Apr 10 7PM
+- Parser: Refactored the function names for converting stringviews to a given datatype (i.e. convert_hex_sv_to_int...) (in convert.h/c)
+- Interpreter: Started implementing some builtin function calls such as 'print', 'println' and 'input'
+- Interpreter: Implemented '.' stack operator

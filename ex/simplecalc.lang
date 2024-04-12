@@ -1,0 +1,6 @@
+"Enter a number: " print .
+input
+"Enter a number: " print .
+input
+"The result is: " print .
++ println

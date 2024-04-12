@@ -16,6 +16,11 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
+	if (argc == 1) {
+		cmdline_parser_print_help();
+		return 3;
+	}
+
 	if (!ai.file_given) {
 		fprintf(stderr, "No file specified\n");
 		return 2;

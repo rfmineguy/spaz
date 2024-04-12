@@ -22,7 +22,7 @@ const char* ictx_stack_node_type_to_str(stack_node_type type) {
 		case INTEGER:   return "INTEGER";
 		case DOUBLE:    return "DOUBLE";
 		case CHAR:      return "CHAR";
-		case STRING:    return "SRTRING";
+		case STRING:    return "STRING";
 		case UNDEFINED: return "UNDEFINED";
 	}
 }
@@ -49,9 +49,14 @@ void ictx_show_stack(interpreter_ctx* ictx) {
 	}
 }
 
-#define ARITH_OPERATION(l, r, resulttype, ltype, rtype, expr) \
-	if (l.type == ltype && r.type == rtype) {\
-		n.type = resulttype;\
+typedef struct ArithInfo {
+	stack_node_type resultType;
+	stack_node_type leftType, rightType;
+} ArithInfo;
+
+#define ARITH_OPERATION(l, r, arithInfo, expr) \
+	if (l.type == arithInfo.leftType && r.type == arithInfo.rightType) {\
+		n.type = arithInfo.resultType;\
 		(expr);\
 	}
 
@@ -89,6 +94,17 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 	// StackOp
 	// =================
 	if (exp->type == EXPRESSION_TYPE_STACK_OP) {
+		/**
+		 *    Operation: .
+		 *    Function: Peek the top of the stack
+		 */
+		if (sv_eq(exp->StackOp.op.op, SV(","))) {
+			return;
+		}
+		/**
+		 *    Operation: .
+		 *    Function: Pop the top of the stack
+		 */
 		if (sv_eq(exp->StackOp.op.op, SV("."))) {
 			ictx->stack_top--;
 			return;
@@ -134,158 +150,112 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 		ictx_process_expression(ictx, exp->EEO.right);
 		stack_node r = ictx->stack[ictx->stack_top--];
 		stack_node l = ictx->stack[ictx->stack_top--];
-#define UNDEFINED_OP_FMT "Undefined operation %c -> \n(left: %s, right: %s)\nLine %d, Col %d\n"
 
-		/**
-		 *   Operation: +
-		 */
+		stack_node n = (stack_node) {.type=UNDEFINED};
 		if (sv_eq(exp->EEO.operation.op, SV("+"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, DOUBLE,  DOUBLE , DOUBLE,  n.doubleLiteral  = l.doubleLiteral  + r.doubleLiteral);
-			ARITH_OPERATION(l, r, INTEGER, DOUBLE , DOUBLE,  n.doubleLiteral  = l.integerLiteral + r.doubleLiteral);
-			ARITH_OPERATION(l, r, DOUBLE,  INTEGER, DOUBLE,  n.doubleLiteral  = l.doubleLiteral  + r.integerLiteral);
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral + r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'+',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType=DOUBLE,  .leftType=DOUBLE,  .rightType=DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  + r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType=DOUBLE,  .leftType=INTEGER, .rightType=DOUBLE}),  n.doubleLiteral  = (l.integerLiteral + r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType=DOUBLE,  .leftType=DOUBLE,  .rightType=DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  + r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType=INTEGER, .leftType=INTEGER, .rightType=INTEGER}), n.integerLiteral = (l.integerLiteral + r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '+' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
-			return;    // we've performed the operation. there is no need to continue in this function
+			return;
 		}
-		/**
-		 *   Operation: -
-		 */
 		if (sv_eq(exp->EEO.operation.op, SV("-"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, DOUBLE,  DOUBLE , DOUBLE,  n.doubleLiteral  = l.doubleLiteral  - r.doubleLiteral);
-			ARITH_OPERATION(l, r, INTEGER, DOUBLE , DOUBLE,  n.doubleLiteral  = l.integerLiteral - r.doubleLiteral);
-			ARITH_OPERATION(l, r, DOUBLE,  INTEGER, DOUBLE,  n.doubleLiteral  = l.doubleLiteral  - r.integerLiteral);
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral - r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'+',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  - r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral - r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  - r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral - r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '-' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
-		/**
-		 *   Operation: *
-		 */
 		if (sv_eq(exp->EEO.operation.op, SV("*"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, DOUBLE,  DOUBLE , DOUBLE,  n.doubleLiteral  = l.doubleLiteral  * r.doubleLiteral);
-			ARITH_OPERATION(l, r, INTEGER, DOUBLE , DOUBLE,  n.doubleLiteral  = l.integerLiteral * r.doubleLiteral);
-			ARITH_OPERATION(l, r, DOUBLE,  INTEGER, DOUBLE,  n.doubleLiteral  = l.doubleLiteral  * r.integerLiteral);
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral * r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'*',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  * r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral * r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  * r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral * r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '*' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
-		/**
-		 *   Operation: /
-		 */
 		if (sv_eq(exp->EEO.operation.op, SV("/"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, DOUBLE,  DOUBLE , DOUBLE,  n.doubleLiteral  = l.doubleLiteral  / r.doubleLiteral);
-			ARITH_OPERATION(l, r, INTEGER, DOUBLE , DOUBLE,  n.doubleLiteral  = l.integerLiteral / r.doubleLiteral);
-			ARITH_OPERATION(l, r, DOUBLE,  INTEGER, DOUBLE,  n.doubleLiteral  = l.doubleLiteral  / r.integerLiteral);
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral / r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'/',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  / r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral / r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  / r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral / r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '/' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
-		/**
-		 *   Operation: %
-		 */
 		if (sv_eq(exp->EEO.operation.op, SV("%"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral % r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'%',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral % r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '%%' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
-		/**
-		 *   Operation: >
-		 */
 		if (sv_eq(exp->EEO.operation.op, SV(">"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, DOUBLE,  DOUBLE,  INTEGER, n.integerLiteral = l.doubleLiteral  > r.doubleLiteral);
-			ARITH_OPERATION(l, r, INTEGER, DOUBLE,  INTEGER, n.integerLiteral = l.integerLiteral > r.doubleLiteral);
-			ARITH_OPERATION(l, r, DOUBLE,  INTEGER, INTEGER, n.integerLiteral = l.doubleLiteral  > r.doubleLiteral);
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral > r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'>',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  > r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral > r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  > r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral > r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '>' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
-		/**
-		 *   Operation: <
-		 */
 		if (sv_eq(exp->EEO.operation.op, SV("<"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, DOUBLE,  DOUBLE,  INTEGER, n.integerLiteral = l.doubleLiteral  < r.doubleLiteral);
-			ARITH_OPERATION(l, r, INTEGER, DOUBLE,  INTEGER, n.integerLiteral = l.integerLiteral < r.doubleLiteral);
-			ARITH_OPERATION(l, r, DOUBLE,  INTEGER, INTEGER, n.integerLiteral = l.doubleLiteral  < r.doubleLiteral);
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral < r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'<',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  < r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral < r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  < r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral < r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '<' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
-		/**
-		 *   Operation: &&
-		 */
 		if (sv_eq(exp->EEO.operation.op, SV("&&"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral && r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'<',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER , .leftType = INTEGER , .rightType = INTEGER}),  n.integerLiteral  = (l.integerLiteral && r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '&&' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
-		/**
-		 *   Operation: ||
-		 */
 		if (sv_eq(exp->EEO.operation.op, SV("||"))) {
-			stack_node n = (stack_node) {.type=UNDEFINED};
-			ARITH_OPERATION(l, r, INTEGER, INTEGER, INTEGER, n.integerLiteral = l.integerLiteral || r.integerLiteral);
-			sl_assert(n.type != UNDEFINED, UNDEFINED_OP_FMT,
-				'<',
-				ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type),
-				exp->state.line, exp->state.col
-			);
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER , .leftType = INTEGER , .rightType = INTEGER}),  n.integerLiteral  = (l.integerLiteral || r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '||' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
+		if (sv_eq(exp->EEO.operation.op, SV("=="))) {
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  == r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral == r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  == r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral == r.integerLiteral));
+			sl_assert(n.type != UNDEFINED, "Operator '||' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
+			ictx->stack[++ictx->stack_top] = n;
+			return;
+		}
+		sl_assert(0, "Undefined operation \"" SV_Fmt "\"\n", SV_Arg(exp->EEO.operation.op));
+	}
+}
 
-		sl_assert(0, "Undefined operation " SV_Fmt "\n", SV_Arg(exp->EEO.operation.op));
+void ictx_process_iff(interpreter_ctx* ictx, Iff iff) {
+	ictx_process_expression(ictx, iff.expression);
+	if (ictx->stack[ictx->stack_top].type == INTEGER) {
+		if (ictx->stack[ictx->stack_top].integerLiteral) {
+			ictx_process_block(ictx, iff.block);
+		}
+	}
+}
+
+void ictx_process_block(interpreter_ctx* ictx, Block block) {
+	for (StatementExpression* it = cvector_begin(block.items); it != cvector_end(block.items); it++) {
+		ictx_process_stmt_expr(ictx, *it);
 	}
 }
 
 void ictx_process_statement(interpreter_ctx* ictx, Statement* stmt) {
+	if (stmt->type == STATEMENT_TYPE_IFF) {
+		ictx_process_iff(ictx, stmt->iff);
+	}
 }
 
 void ictx_process_stmt_expr(interpreter_ctx* ictx, StatementExpression stmtexpr) {

@@ -69,7 +69,7 @@ const char* token_str(token_type t) {
 		// case T_RBKT:				return "RKBT";
 		case T_LBRC:				return "LBRC";
 		case T_RBRC:				return "RBRC";
-		case T_EQ: 					return "EQ"; 					 
+		case T_DEQ:					return "DEQ"; 					 
 		case T_GT: 					return "GT"; 
 		case T_LT: 					return "LT";
 		case T_GTEQ:				return "GTEQ"; 
@@ -117,6 +117,7 @@ void tctx_internal_init_regex(tokenizer_ctx* ctx) {
 	ctx->regex_store.r_land       = rnew("&&");
 	ctx->regex_store.r_gteq       = rnew(">=");
 	ctx->regex_store.r_lteq       = rnew("<=");
+	ctx->regex_store.r_deq        = rnew("==");
 }
 
 void tctx_internal_free_regex(tokenizer_ctx* ctx) {
@@ -239,6 +240,7 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	RMATCH(ctx->regex_store.r_land, T_LAND);
 	RMATCH(ctx->regex_store.r_gteq, T_GTEQ);
 	RMATCH(ctx->regex_store.r_lteq, T_LTEQ);
+	RMATCH(ctx->regex_store.r_deq, T_DEQ);
 	CHMATCH('|', T_BOR);
 	CHMATCH('&', T_BAND);
 	CHMATCH('>', T_GT);
@@ -255,7 +257,7 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	CHMATCH('*', T_MUL);
 	CHMATCH('/', T_DIV);
 	CHMATCH('%', T_MOD);
-	CHMATCH('=', T_EQ);
+	// CHMATCH('=', T_EQ);
 	CHMATCH('\'', T_SQUOTE);
 	CHMATCH('\"', T_DQUOTE);
 
