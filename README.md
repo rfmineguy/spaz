@@ -38,5 +38,5 @@ Usage
 ---
 WIP
 ```sh
-./out/spaz
+Usage: spaz [-f file] [-pvi]
 ```
