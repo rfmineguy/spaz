@@ -1,17 +1,13 @@
-{
-  3 5 + 3 - print .
-}
+4 5 - println .
 
-4 5 - print .
-
-4 5 + print .
+4 5 + println .
 3 4 +
 4 3 -
 
-if 3 3 - 4 > {
-	2 4 + 4 - 5 * print .
-	2 3 - print .
+if 3 3 - 4 < {
+	2 4 + 4 - 5 * println .
+	2 3 - println .
 	if 1 {
-		2 3 + print .
+		2 3 + println .
 	}
 }

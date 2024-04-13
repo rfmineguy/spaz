@@ -49,15 +49,31 @@ void ictx_show_stack(interpreter_ctx* ictx) {
 	}
 }
 
+
+/*
+ *  A helper struct for using the ARITH_OPERATION macro
+ *    + resultType  -> what is the type of the resulting operation?
+ *    + leftType    -> what is the type of the left operand?
+ *    + rightType   -> what is the type of the right operand?
+ */
 typedef struct ArithInfo {
 	stack_node_type resultType;
 	stack_node_type leftType, rightType;
 } ArithInfo;
 
+/*
+ *  A macro used to perform an arbitrary operation based on the two operand types
+ *    + l         -> the left operand (stack_node)
+ *    + r         -> the right operand (stack_node)
+ *    + arithInfo -> instance of the struct defined above
+ *    + expr      -> the operation to execute if the left and right operands pass type checking
+ */
 #define ARITH_OPERATION(l, r, arithInfo, expr) \
 	if (l.type == arithInfo.leftType && r.type == arithInfo.rightType) {\
 		n.type = arithInfo.resultType;\
-		(expr);\
+		{\
+			(expr);\
+		}\
 	}
 
 void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
@@ -99,6 +115,8 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 		 *    Function: Peek the top of the stack
 		 */
 		if (sv_eq(exp->StackOp.op.op, SV(","))) {
+			ictx->peeked = ictx->stack[ictx->stack_top];
+			//sl_log("top of stack: %d", ictx->stack[ictx->stack_top].type);
 			return;
 		}
 		/**
@@ -195,18 +213,18 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 			return;
 		}
 		if (sv_eq(exp->EEO.operation.op, SV(">"))) {
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  > r.doubleLiteral));
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral > r.doubleLiteral));
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  > r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  > r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral > r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  > r.integerLiteral));
 			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral > r.integerLiteral));
 			sl_assert(n.type != UNDEFINED, "Operator '>' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
 			return;
 		}
 		if (sv_eq(exp->EEO.operation.op, SV("<"))) {
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  < r.doubleLiteral));
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral < r.doubleLiteral));
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  < r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  < r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral < r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  < r.integerLiteral));
 			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral < r.integerLiteral));
 			sl_assert(n.type != UNDEFINED, "Operator '<' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
@@ -225,12 +243,22 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 			return;
 		}
 		if (sv_eq(exp->EEO.operation.op, SV("=="))) {
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  == r.doubleLiteral));
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral == r.doubleLiteral));
-			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = DOUBLE , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  == r.integerLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER , .leftType = DOUBLE , .rightType = DOUBLE}),  n.doubleLiteral  = (l.doubleLiteral  == r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER , .leftType = INTEGER, .rightType = DOUBLE}),  n.doubleLiteral  = (l.integerLiteral == r.doubleLiteral));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER , .leftType = DOUBLE,  .rightType = INTEGER}), n.doubleLiteral  = (l.doubleLiteral  == r.integerLiteral));
 			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER, .leftType = INTEGER, .rightType = INTEGER}), n.integerLiteral = (l.integerLiteral == r.integerLiteral));
-			sl_assert(n.type != UNDEFINED, "Operator '||' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
+			ARITH_OPERATION(l, r, ((ArithInfo){.resultType = INTEGER,  .leftType = STRING,  .rightType = STRING}),  ({
+				String_View l2 = l.stringLiteral, r2 = r.stringLiteral;
+				int l2_quoted = l.stringLiteral.data[0] == '\"' && l.stringLiteral.data[l.stringLiteral.count - 1] == '\"';
+				int r2_quoted = r.stringLiteral.data[0] == '\"' && r.stringLiteral.data[r.stringLiteral.count - 1] == '\"';
+				if (l2_quoted) l2 = sv_from_parts(l.stringLiteral.data + 1, l.stringLiteral.count - 2);
+				if (r2_quoted) r2 = sv_from_parts(r.stringLiteral.data + 1, r.stringLiteral.count - 2);
+				n.integerLiteral = sv_eq(l2, r2);
+				//sl_log(SV_Fmt " == " SV_Fmt " = %d\n", SV_Arg(l2), SV_Arg(r2), n.integerLiteral);
+			}));
+			sl_assert(n.type != UNDEFINED, "Operator '==' not defined for %s and %s\n", ictx_stack_node_type_to_str(l.type), ictx_stack_node_type_to_str(r.type));
 			ictx->stack[++ictx->stack_top] = n;
+			// sl_log("'==' Push: %d\n", ictx->stack[ictx->stack_top].integerLiteral);
 			return;
 		}
 		sl_assert(0, "Undefined operation \"" SV_Fmt "\"\n", SV_Arg(exp->EEO.operation.op));
@@ -238,9 +266,11 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 }
 
 void ictx_process_iff(interpreter_ctx* ictx, Iff iff) {
+	//sl_log("iff");
 	ictx_process_expression(ictx, iff.expression);
 	if (ictx->stack[ictx->stack_top].type == INTEGER) {
-		if (ictx->stack[ictx->stack_top].integerLiteral) {
+		// sl_log("Stacktop: %d\n", ictx->stack[ictx->stack_top].integerLiteral);
+		if (ictx->stack[ictx->stack_top].integerLiteral != 0) {
 			ictx_process_block(ictx, iff.block);
 		}
 	}

@@ -57,4 +57,6 @@ void interp_builtin_input(stack_node* o_sn) {
 		o_sn->doubleLiteral = dbl;
 		return;
 	}
+	o_sn->type = STRING;
+	o_sn->stringLiteral = input;
 }

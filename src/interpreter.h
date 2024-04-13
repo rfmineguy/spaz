@@ -25,6 +25,8 @@ typedef struct {
 	// Data stack
 	stack_node stack[STACK_SIZE];
 	int        stack_top;
+
+	stack_node peeked;
 } interpreter_ctx;
 
 

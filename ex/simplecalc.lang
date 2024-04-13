@@ -2,5 +2,9 @@
 input
 "Enter a number: " print .
 input
-"The result is: " print .
-+ println
+"Enter an operator: " print .
+input
+if , "+" == {
+	.
+	, , + println .
+}
