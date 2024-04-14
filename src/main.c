@@ -1,3 +1,4 @@
+#include "sl_log.h"
 #define DEBUG_AST 1
 #include "ast.h"
 #include "ast_free.h"
@@ -30,6 +31,15 @@ int main(int argc, char** argv) {
 	parse_ctx pctx = pctx_new(100);
 	AST_Node program = (AST_Node) {.nodeType=AST_NODE_TYPE_PROGRAM};
 
+	if (ai.tokenize_given) {
+		token tok;
+		while ((tok = tctx_get_next(&ctx)).type != T_EOF) {
+			tctx_advance(&ctx);
+			printf("%10s   |  " SV_Fmt "\n", token_str(tok.type), SV_Arg(tok.text));
+		}
+		return 4;
+	}
+
 	token tok;
 	while ((tok = tctx_get_next(&ctx)).type != T_EOF) {
 		tctx_advance(&ctx);
@@ -38,6 +48,10 @@ int main(int argc, char** argv) {
 		AST_Node n;
 		int p;
 		if ((p = try_convert_token_to_terminal(tok, &n)) != 0) {
+			pctx_push(&pctx, n);
+		}
+		else if ((p = try_convert_token_to_stackop(tok, &n)) != 0) {
+			sl_log("Converted to stack op");
 			pctx_push(&pctx, n);
 		}
 		else if ((p = try_convert_token_to_operator(tok, &n)) != 0) {

@@ -20,3 +20,7 @@ Apr 10 7PM
 - Parser: Refactored the function names for converting stringviews to a given datatype (i.e. convert_hex_sv_to_int...) (in convert.h/c)
 - Interpreter: Started implementing some builtin function calls such as 'print', 'println' and 'input'
 - Interpreter: Implemented '.' stack operator
+
+Apr 13 6PM
+- Added support for stack operators to be able to be repeated within a single token. This will allow for peeking more than just the top of the stack. It could allow for peeking 3 items past the top of the stack if needed.
+   - This support in the interpretter is not present just yet

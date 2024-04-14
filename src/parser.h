@@ -13,6 +13,8 @@
 	(Term) {.type=type_, expr}
 #define P_NEW_OPERATOR(type_, expr) \
 	(Operator) {.type=type_, expr}
+#define P_NEW_STACK_OP(type_, expr) \
+	(StackOp) {.type=type_, expr}
 #define P_NEW_RESERVED(tok) \
 	(Reserved) {.token = tok}
 
@@ -53,6 +55,7 @@ void 							pctx_print_stack_lite(parse_ctx*);
 //   - number of matched nodes
 //   - 0 indicates that nothing was reduced
 int               try_convert_token_to_terminal(token, AST_Node*);
+int               try_convert_token_to_stackop(token, AST_Node*);
 int               try_convert_token_to_operator(token, AST_Node*);
 int               try_convert_token_to_reserved(token, AST_Node*);
 int 							try_reduce(parse_ctx*, AST_Node*);

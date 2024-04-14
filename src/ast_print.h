@@ -9,6 +9,7 @@ void ast_print_reserved       (Reserved, int);
 void ast_print_terminal       (Terminal, int);
 void ast_print_term           (Term, int);
 void ast_print_operator       (Operator, int);
+void ast_print_stackop        (StackOp, int);
 void ast_print_stmt_expr      (StatementExpression, int);
 void ast_print_expression     (Expression*, int);
 void ast_print_statement      (Statement*, int);

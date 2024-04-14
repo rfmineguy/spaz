@@ -4,7 +4,12 @@ input
 input
 "Enter an operator: " print .
 input
+showstack
+"Result: " print .
 if , "+" == {
-	.
-	, , + println .
+	, ,, + println .
 }
+if , "-" == {
+  "hi" println .
+}
+, print .

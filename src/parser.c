@@ -144,6 +144,27 @@ int try_convert_token_to_terminal(token tok, AST_Node* out_n) {
 	return status;
 }
 
+int try_convert_token_to_stackop(token tok, AST_Node* out_n) {
+	AST_NodeType nt = AST_NODE_TYPE_UNDEFINED;
+	StackOp op;
+	int status = 0;
+	switch (tok.type) {
+		case T_COMMA_SEQ:
+			nt = AST_NODE_TYPE_STACK_OPERATOR;
+			op = P_NEW_STACK_OP(STACK_OP_TYPE_COMMA_SEQ, .op.op_str=tok.text);
+			status = 1;
+			break;
+		case T_PERIOD_SEQ:
+			nt = AST_NODE_TYPE_STACK_OPERATOR;
+			op = P_NEW_STACK_OP(STACK_OP_TYPE_PERIOD_SEQ, .op.op_str=tok.text);
+			status = 1;
+			break;
+		default: break; 
+	}
+	*out_n = (AST_Node) {.nodeType=nt, .stackOp = op, .state=tok.state};
+	return status;
+}
+
 int try_convert_token_to_operator(token tok, AST_Node* out_n) {
 	AST_NodeType nt = AST_NODE_TYPE_UNDEFINED;
 	Operator op;
@@ -151,17 +172,12 @@ int try_convert_token_to_operator(token tok, AST_Node* out_n) {
 	switch (tok.type) {
 		case T_LOGIC_BEG...T_LOGIC_END:
 			nt = AST_NODE_TYPE_OPERATOR;
-			op=P_NEW_OPERATOR(OPERATOR_TYPE_LOGIC, .op=tok.text);
-			status = 1;
-			break;
-		case T_STACK_BEG...T_STACK_END:
-			nt = AST_NODE_TYPE_OPERATOR;
-			op=P_NEW_OPERATOR(OPERATOR_TYPE_STACK, .op=tok.text);
+			op=P_NEW_OPERATOR(OPERATOR_TYPE_LOGIC, .op_str=tok.text);
 			status = 1;
 			break;
 		case T_ARITH_BEG...T_ARITH_END:
 			nt = AST_NODE_TYPE_OPERATOR;
-			op=P_NEW_OPERATOR(OPERATOR_TYPE_ARITH, .op=tok.text);
+			op=P_NEW_OPERATOR(OPERATOR_TYPE_ARITH, .op_str=tok.text);
 			status = 1;
 			break;
 		default: break;
@@ -202,15 +218,29 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 	}
 
 	// stack_op -> expression
-	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_OPERATOR &&
-			pctx_peek_offset(pctx, 0).op.type == OPERATOR_TYPE_STACK) {
-		sl_log("stack operator");
+	// if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_OPERATOR &&
+	// 		pctx_peek_offset(pctx, 0).op.type == OPERATOR_TYPE_STACK) {
+	// 	sl_log("stack operator");
+	// 	AST_Node expr1 = pctx_peek_offset(pctx, 0);
+	// 	out_n->nodeType = AST_NODE_TYPE_STATEMENT_EXPRESSION;
+	// 	out_n->stmtExpr.type = STATEMENT_EXPR_TYPE_EXPRESSION;
+	// 	out_n->stmtExpr.expr = malloc(sizeof(Expression));
+	// 	out_n->stmtExpr.expr->type = EXPRESSION_TYPE_STACK_OP;
+	// 	out_n->stmtExpr.expr->stackOp.op = expr1.stackOp.op;
+	// 	out_n->stmtExpr.expr->stackOp.type = expr1.stackOp.type;
+	// 	return 1;
+  //}
+
+	// stack_op -> expression
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_STACK_OPERATOR) {
+		sl_log("Stack Operator");
 		AST_Node expr1 = pctx_peek_offset(pctx, 0);
 		out_n->nodeType = AST_NODE_TYPE_STATEMENT_EXPRESSION;
 		out_n->stmtExpr.type = STATEMENT_EXPR_TYPE_EXPRESSION;
 		out_n->stmtExpr.expr = malloc(sizeof(Expression));
 		out_n->stmtExpr.expr->type = EXPRESSION_TYPE_STACK_OP;
-		out_n->stmtExpr.expr->StackOp.op = expr1.op;
+		out_n->stmtExpr.expr->stackOp.op = expr1.stackOp.op;
+		out_n->stmtExpr.expr->stackOp.type = expr1.stackOp.type;
 		return 1;
 	}
 

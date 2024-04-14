@@ -1,11 +1,12 @@
 package "sli"
 version "1.0.0"
 purpose "An interpreter for spaz"
-usage "spaz [-f file] [-pvi]"
+usage "spaz [-f file] [-tpiv]"
 description "StackLang interpreter"
 versiontext "Developed by Riley Fischer"
 
 option "file" f "" string optional
+option "tokenize" t "" optional
 option "ptree" p "" optional
 option "verbose" v "" optional
 option "interpret" i "" optional

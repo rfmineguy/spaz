@@ -66,6 +66,10 @@ typedef enum OperatorType {
 	OPERATOR_TYPE_LOGIC,      // operator := <logic_op>
 	OPERATOR_TYPE_STACK			  // operator := <stack_op> ??
 } OperatorType;
+typedef enum StackOpType {
+	STACK_OP_TYPE_COMMA_SEQ,
+	STACK_OP_TYPE_PERIOD_SEQ,
+} StackOpType;
 typedef enum ExpressionType {
 	EXPRESSION_TYPE_PROC_CALL,// expression := <expression> <id>
 	EXPRESSION_TYPE_EEO,      // expression := <expression> <expression> <operator>
@@ -91,6 +95,7 @@ typedef struct Reserved Reserved;
 typedef struct Terminal Terminal;
 typedef struct Term Term;
 typedef struct Operator Operator;
+typedef struct StackOp StackOp;
 typedef struct Expression Expression;
 typedef struct ProcedureDef ProcedureDef;
 typedef struct Statement Statement;
@@ -110,6 +115,7 @@ typedef enum AST_NodeType {
 	AST_NODE_TYPE_TERMINAL,
 	AST_NODE_TYPE_TERM,
 	AST_NODE_TYPE_OPERATOR,
+	AST_NODE_TYPE_STACK_OPERATOR,
 	AST_NODE_TYPE_PROCEDURE_DEF,
 	AST_NODE_TYPE_STATEMENT_EXPRESSION,
 	AST_NODE_TYPE_PROCEDURE_CALL,
@@ -136,7 +142,7 @@ struct Reserved {
 struct Operator {
 	tokenizer_state state;
 	OperatorType type;
-	String_View op;
+	String_View op_str;
 };
 
 struct Terminal {
@@ -171,6 +177,11 @@ struct ProcedureCall {
 	int argumentCount;
 };
 
+struct StackOp {
+	StackOpType type;
+	Operator op;
+};
+
 /** 
  *   when type == TERM
  *     - only term is guarunteed to be a valid value
@@ -183,9 +194,12 @@ struct Expression {
 	tokenizer_state state;
 	ExpressionType type;
 	union {
-		struct {
-			Operator op;
-		} StackOp;
+		StackOp stackOp;
+		// struct {
+		// 	StackOpType type;
+		// 	Operator op;
+		// 	int repeat;
+		// } StackOp;
 		struct {
 			Expression *left, *right;
 			Operator operation;
@@ -260,6 +274,7 @@ struct AST_Node {
 		Program program;
 		Terminal terminal;
 		Operator op;
+		StackOp stackOp;
 		Reserved reserved;
 		Term term;
 		ProcedureDef *procDef;

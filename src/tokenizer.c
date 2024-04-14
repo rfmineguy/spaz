@@ -79,8 +79,8 @@ const char* token_str(token_type t) {
 		case T_BOR:    			return "BOR";
 		case T_BAND:   			return "BAND";
 		case T_COLON:   		return "COLON";
-		case T_COMMA: 			return "COMMA";
-		case T_PERIOD: 			return "PERIOD";
+		case T_COMMA_SEQ: 	return "COMMA_SEQ";
+		case T_PERIOD_SEQ:	return "PERIOD_SEQ";
 		case T_MINUS:   		return "MINUS";
 		case T_PLUS:    		return "PLUS";
 		case T_MUL:     		return "MUL";
@@ -118,6 +118,9 @@ void tctx_internal_init_regex(tokenizer_ctx* ctx) {
 	ctx->regex_store.r_gteq       = rnew(">=");
 	ctx->regex_store.r_lteq       = rnew("<=");
 	ctx->regex_store.r_deq        = rnew("==");
+	ctx->regex_store.r_comma_seq  = rnew("[,]+");
+	ctx->regex_store.r_period_seq = rnew("[.]+");
+	ctx->regex_store.r_semi_seq   = rnew("[;]+");
 }
 
 void tctx_internal_free_regex(tokenizer_ctx* ctx) {
@@ -137,6 +140,9 @@ void tctx_internal_free_regex(tokenizer_ctx* ctx) {
 	regfree(&ctx->regex_store.r_land);
 	regfree(&ctx->regex_store.r_gteq);
 	regfree(&ctx->regex_store.r_lteq);
+	regfree(&ctx->regex_store.r_comma_seq);
+	regfree(&ctx->regex_store.r_period_seq);
+	regfree(&ctx->regex_store.r_semi_seq);
 }
 
 tokenizer_ctx tctx_from_file(const char* filename) {
@@ -241,13 +247,16 @@ token tctx_get_next(tokenizer_ctx* ctx) {
 	RMATCH(ctx->regex_store.r_gteq, T_GTEQ);
 	RMATCH(ctx->regex_store.r_lteq, T_LTEQ);
 	RMATCH(ctx->regex_store.r_deq, T_DEQ);
+	RMATCH(ctx->regex_store.r_comma_seq, T_COMMA_SEQ);
+	RMATCH(ctx->regex_store.r_period_seq, T_PERIOD_SEQ);
+	RMATCH(ctx->regex_store.r_semi_seq, T_SEMI_SEQ);
 	CHMATCH('|', T_BOR);
 	CHMATCH('&', T_BAND);
 	CHMATCH('>', T_GT);
 	CHMATCH('<', T_LT);
 	CHMATCH(':', T_COLON);
-	CHMATCH(',', T_COMMA);
-	CHMATCH('.', T_PERIOD);
+	// CHMATCH(',', T_COMMA);
+	// CHMATCH('.', T_PERIOD);
 	CHMATCH('(', T_LP);
 	CHMATCH(')', T_RP);
 	CHMATCH('{', T_LBRC);

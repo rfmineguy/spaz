@@ -92,12 +92,21 @@ void ast_print_term           (Term term, int depth) {
 void ast_print_operator       (Operator op, int depth) {
 	sl_log_ast("%*cOperator: ", depth * 2, ' ');
 	switch (op.type) {
-		case OPERATOR_TYPE_ARITH: sl_log_ast("%*cArithOp = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op)); break;
-		case OPERATOR_TYPE_LOGIC: sl_log_ast("%*cLogicOp = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op)); break;
-		case OPERATOR_TYPE_STACK: sl_log_ast("%*cStackOp = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op)); break;
+		case OPERATOR_TYPE_ARITH: sl_log_ast("%*cArithOp = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op_str)); break;
+		case OPERATOR_TYPE_LOGIC: sl_log_ast("%*cLogicOp = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op_str)); break;
+		case OPERATOR_TYPE_STACK: sl_log_ast("%*cStackOp = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op_str)); break;
 		default: sl_log_ast("%*cUnknown: %d", (depth + 1) * 2, ' ', op.type);
 	}
 }
+
+void ast_print_stackop(StackOp op, int depth) {
+	sl_log_ast("%*cStackOp: ", depth * 2, ' ');
+	switch (op.type) {
+		case STACK_OP_TYPE_COMMA_SEQ: sl_log_ast("%*cCommaSeq = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op.op_str)); break;
+		case STACK_OP_TYPE_PERIOD_SEQ: sl_log_ast("%*cPeriodSeq = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op.op_str)); break;
+	}
+}
+
 void ast_print_stmt_expr(StatementExpression stmtExpr, int depth) {
 	sl_log_ast("%*cStmtExpr: ", depth * 2, ' ');
 	switch (stmtExpr.type) {
@@ -119,7 +128,7 @@ void ast_print_expression     (Expression *expr, int depth) {
 			break;
 		case EXPRESSION_TYPE_STACK_OP:
 			sl_log_ast("%*cExpression(StackOp): ", depth * 2, ' ');
-			ast_print_operator(expr->StackOp.op, depth + 1);
+			ast_print_stackop(expr->stackOp, depth + 1);
 			break;
 		case EXPRESSION_TYPE_PROC_CALL:
 			sl_log_ast("%*cExpression(ProcCall): ", depth * 2, ' ');
