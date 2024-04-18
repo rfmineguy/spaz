@@ -231,6 +231,12 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 	// 	return 1;
   //}
 
+	// id -> procedure_call
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_RESERVED &&
+			pctx_peek_offset(pctx, 0).reserved.token.type == T_ID) {
+		AST_Node id = pctx_peek_offset(pctx, 0);
+	}
+
 	// stack_op -> expression
 	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_STACK_OPERATOR) {
 		sl_log("Stack Operator");
@@ -242,6 +248,11 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 		out_n->stmtExpr.expr->stackOp.op = expr1.stackOp.op;
 		out_n->stmtExpr.expr->stackOp.type = expr1.stackOp.type;
 		return 1;
+	}
+
+	// operator -> expression
+	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_OPERATOR) {
+	
 	}
 
 	// expression expression op -> expression

@@ -1,6 +1,7 @@
 #include "interpreter_builtins.h"
 #include "interpreter.h"
 #include "convert.h"
+#include "sl_assert.h"
 #include <stdio.h>
 
 void interp_builtin_print(stack_node sn) {
@@ -21,9 +22,11 @@ void interp_builtin_print(stack_node sn) {
 		case DOUBLE:
 			printf("%0.4f", sn.doubleLiteral);
 			break;
+		case STACK_OP: sl_assert(0, "Printing stackop not supported yet"); break;
 		case UNDEFINED:
 			printf("type_value=%d, type=%s", sn.type, ictx_stack_node_type_to_str(UNDEFINED));
 			break;
+		default: printf("print failed. sn.type = %d\n", sn.type);
 	}
 }
 
@@ -59,4 +62,19 @@ void interp_builtin_input(stack_node* o_sn) {
 	}
 	o_sn->type = STRING;
 	o_sn->stringLiteral = input;
+}
+
+void interp_builtin_showstack(interpreter_ctx* ictx) {
+	for (int i = ictx->stack_top; i >= 0; i--) {
+		stack_node n = ictx->stack[i];
+		printf("%d: ", i);
+		switch (n.type) {
+			case INTEGER:   printf("INTEGER: %d\n", n.integerLiteral); break;
+			case DOUBLE:    printf("DOUBLE:  %0.4f\n", n.doubleLiteral); break;
+			case STRING:    printf("STRING:  " SV_Fmt "\n", SV_Arg(n.stringLiteral)); break;
+			case CHAR:      printf("CHAR:    " SV_Fmt "\n", SV_Arg(n.charLiteral)); break;
+			case STACK_OP:  printf("STACKOP: " SV_Fmt "\n", SV_Arg(n.stackOp.op.op_str)); break;
+			case UNDEFINED: printf("Undefined\n"); break;
+		}
+	}
 }

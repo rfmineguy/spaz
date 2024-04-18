@@ -7,7 +7,7 @@
 #define STACK_SIZE 500
 
 typedef enum {
-	UNDEFINED=0, CHAR, STRING, DOUBLE, INTEGER
+	UNDEFINED=0, CHAR, STRING, DOUBLE, INTEGER, STACK_OP
 } stack_node_type;
 
 typedef struct {
@@ -18,6 +18,7 @@ typedef struct {
 		double doubleLiteral;
 		int integerLiteral;
 		String_View charLiteral;
+		StackOp stackOp;
 	};
 } stack_node;
 

@@ -6,5 +6,6 @@
 void interp_builtin_print(stack_node);
 void interp_builtin_println(stack_node);
 void interp_builtin_input(stack_node*);
+void interp_builtin_showstack(interpreter_ctx*);
 
 #endif

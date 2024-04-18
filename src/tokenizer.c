@@ -81,6 +81,7 @@ const char* token_str(token_type t) {
 		case T_COLON:   		return "COLON";
 		case T_COMMA_SEQ: 	return "COMMA_SEQ";
 		case T_PERIOD_SEQ:	return "PERIOD_SEQ";
+		case T_SEMI_SEQ:    return "SEMI_SEQ";
 		case T_MINUS:   		return "MINUS";
 		case T_PLUS:    		return "PLUS";
 		case T_MUL:     		return "MUL";
