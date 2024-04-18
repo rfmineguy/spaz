@@ -102,8 +102,9 @@ void ast_print_operator       (Operator op, int depth) {
 void ast_print_stackop(StackOp op, int depth) {
 	sl_log_ast("%*cStackOp: ", depth * 2, ' ');
 	switch (op.type) {
-		case STACK_OP_TYPE_COMMA_SEQ: sl_log_ast("%*cCommaSeq = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op.op_str)); break;
+		case STACK_OP_TYPE_COMMA_SEQ:  sl_log_ast("%*cCommaSeq = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op.op_str)); break;
 		case STACK_OP_TYPE_PERIOD_SEQ: sl_log_ast("%*cPeriodSeq = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op.op_str)); break;
+		case STACK_OP_TYPE_SEMI_SEQ:   sl_log_ast("%*cSemiSeq = " SV_Fmt "", (depth + 1) * 2, ' ', SV_Arg(op.op.op_str)); break;
 	}
 }
 

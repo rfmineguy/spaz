@@ -69,6 +69,7 @@ typedef enum OperatorType {
 typedef enum StackOpType {
 	STACK_OP_TYPE_COMMA_SEQ,
 	STACK_OP_TYPE_PERIOD_SEQ,
+	STACK_OP_TYPE_SEMI_SEQ,
 } StackOpType;
 typedef enum ExpressionType {
 	EXPRESSION_TYPE_PROC_CALL,// expression := <expression> <id>

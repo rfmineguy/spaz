@@ -4,8 +4,23 @@ input
 input
 "Enter an operator: " print .
 input
-"Result: " print .
 ;
+"Result: " println .
 if , "*" == {
+	.
 	, ,, * println .
+	exit .
+}
+.
+;
+if , "+" == {
+	, ,, + println .
+	exit .
+}
+.
+;
+if , "-" == {
+	.
+	, ,, - println .
+	exit .
 }

@@ -159,6 +159,11 @@ int try_convert_token_to_stackop(token tok, AST_Node* out_n) {
 			op = P_NEW_STACK_OP(STACK_OP_TYPE_PERIOD_SEQ, .op.op_str=tok.text);
 			status = 1;
 			break;
+		case T_SEMI_SEQ:
+			nt = AST_NODE_TYPE_STACK_OPERATOR;
+			op = P_NEW_STACK_OP(STACK_OP_TYPE_SEMI_SEQ, .op.op_str=tok.text);
+			status = 1;
+			break;
 		default: break; 
 	}
 	*out_n = (AST_Node) {.nodeType=nt, .stackOp = op, .state=tok.state};
@@ -239,7 +244,7 @@ int try_reduce(parse_ctx* pctx, AST_Node* out_n) {
 
 	// stack_op -> expression
 	if (pctx_peek_offset(pctx, 0).nodeType == AST_NODE_TYPE_STACK_OPERATOR) {
-		sl_log("Stack Operator");
+		sl_log("Stack Operator: " SV_Fmt "\n", SV_Arg(pctx_peek_offset(pctx, 0).stackOp.op.op_str));
 		AST_Node expr1 = pctx_peek_offset(pctx, 0);
 		out_n->nodeType = AST_NODE_TYPE_STATEMENT_EXPRESSION;
 		out_n->stmtExpr.type = STATEMENT_EXPR_TYPE_EXPRESSION;

@@ -123,6 +123,11 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 				ictx->stack_top--;
 				break;
 			}
+			case STACK_OP_TYPE_SEMI_SEQ: {
+				stack_node s = ictx->stack[ictx->stack_top];
+				ictx->stack[++ictx->stack_top] = s;
+				break;
+			}
 			case STACK_OP_TYPE_COMMA_SEQ: {
 				// sl_log("Comma op");
 				// push the item from count in the stack to the top
@@ -196,6 +201,10 @@ void ictx_process_expression(interpreter_ctx* ictx, Expression* exp) {
 	// ProcedureCall
 	// =================
 	if (exp->type == EXPRESSION_TYPE_PROC_CALL) {
+		if (sv_eq(exp->EProcCall.proc_call.name, SV("exit"))) {
+			exit(100);
+			return;
+		}
 		if (sv_eq(exp->EProcCall.proc_call.name, SV("print"))) {
 			stack_node l = ictx->stack[ictx->stack_top];
 			interp_builtin_print(l);
